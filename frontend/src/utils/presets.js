@@ -1,0 +1,95 @@
+// Geographical presets for the LogiRoute application.
+// Coordinates are set for a standard SVG viewBox of 600 x 400.
+
+export const presets = {
+  downtown_5: {
+    name: "5-Node: Downtown Hub & Spoke",
+    description: "A compact metropolitan delivery grid. Perfect for testing and visualizing the exact path searches and brute force TSP loops.",
+    nodes: [
+      { id: 0, label: "Central Hub", x: 300, y: 200, isHub: true },
+      { id: 1, label: "North Substation", x: 300, y: 60 },
+      { id: 2, label: "East Substation", x: 500, y: 200 },
+      { id: 3, label: "South Substation", x: 300, y: 340 },
+      { id: 4, label: "West Substation", x: 100, y: 200 },
+    ],
+    edges: [
+      { from: 0, to: 1, weight: 8 },
+      { from: 0, to: 2, weight: 10 },
+      { from: 0, to: 3, weight: 7 },
+      { from: 0, to: 4, weight: 9 },
+      { from: 1, to: 2, weight: 12 },
+      { from: 2, to: 3, weight: 11 },
+      { from: 3, to: 4, weight: 13 },
+      { from: 4, to: 1, weight: 10 },
+    ]
+  },
+  metro_8: {
+    name: "8-Node: Metro Suburb Grid",
+    description: "A standard regional distribution grid with overlapping delivery neighborhoods. Solves TSP quickly under both approaches.",
+    nodes: [
+      { id: 0, label: "Metro Logistics Hub", x: 280, y: 200, isHub: true },
+      { id: 1, label: "Greenwood Suburb", x: 130, y: 100 },
+      { id: 2, label: "Riverview District", x: 420, y: 90 },
+      { id: 3, label: "Industrial Park", x: 480, y: 210 },
+      { id: 4, label: "Coastal Suburb", x: 400, y: 320 },
+      { id: 5, label: "South Valley", x: 220, y: 340 },
+      { id: 6, label: "Hilltop Village", x: 100, y: 280 },
+      { id: 7, label: "Highland Heights", x: 250, y: 60 },
+    ],
+    edges: [
+      { from: 0, to: 1, weight: 14 },
+      { from: 0, to: 2, weight: 15 },
+      { from: 0, to: 4, weight: 12 },
+      { from: 0, to: 5, weight: 10 },
+      { from: 0, to: 7, weight: 11 },
+      { from: 1, to: 6, weight: 8 },
+      { from: 1, to: 7, weight: 9 },
+      { from: 2, to: 3, weight: 7 },
+      { from: 2, to: 7, weight: 13 },
+      { from: 3, to: 4, weight: 9 },
+      { from: 4, to: 5, weight: 11 },
+      { from: 5, to: 6, weight: 10 },
+      { from: 6, to: 0, weight: 13 },
+    ]
+  },
+  regional_12: {
+    name: "12-Node: Regional State Network",
+    description: "A comprehensive state-level logistics topology. Highlights the massive divide between O(N!) Brute Force and O(N^2 2^N) Dynamic Programming.",
+    nodes: [
+      { id: 0, label: "Regional Hub Terminal", x: 300, y: 200, isHub: true },
+      { id: 1, label: "Airport Cargo Area", x: 160, y: 100 },
+      { id: 2, label: "Port Terminal Alpha", x: 480, y: 80 },
+      { id: 3, label: "Tech Park Central", x: 540, y: 190 },
+      { id: 4, label: "Agricultural Sub-Hub", x: 490, y: 320 },
+      { id: 5, label: "Textile Quarter", x: 280, y: 350 },
+      { id: 6, label: "Automotive Center", x: 100, y: 300 },
+      { id: 7, label: "Old Suburb North", x: 90, y: 180 },
+      { id: 8, label: "State Border Outpost", x: 290, y: 50 },
+      { id: 9, label: "Commercial Hub East", x: 410, y: 150 },
+      { id: 10, label: "Residential Zone B", x: 390, y: 270 },
+      { id: 11, label: "Freight Station West", x: 190, y: 270 },
+    ],
+    edges: [
+      { from: 0, to: 1, weight: 18 },
+      { from: 0, to: 2, weight: 24 },
+      { from: 0, to: 5, weight: 16 },
+      { from: 0, to: 9, weight: 11 },
+      { from: 0, to: 10, weight: 9 },
+      { from: 0, to: 11, weight: 12 },
+      { from: 1, to: 7, weight: 10 },
+      { from: 1, to: 8, weight: 13 },
+      { from: 2, to: 3, weight: 9 },
+      { from: 2, to: 8, weight: 18 },
+      { from: 2, to: 9, weight: 12 },
+      { from: 3, to: 4, weight: 14 },
+      { from: 4, to: 5, weight: 19 },
+      { from: 4, to: 10, weight: 11 },
+      { from: 5, to: 6, weight: 17 },
+      { from: 6, to: 7, weight: 13 },
+      { from: 6, to: 11, weight: 11 },
+      { from: 7, to: 11, weight: 14 },
+      { from: 8, to: 9, weight: 15 },
+      { from: 10, to: 11, weight: 16 },
+    ]
+  }
+};
