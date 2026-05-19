@@ -1,23 +1,18 @@
 import React from 'react';
 import { presets } from '../utils/presets';
-import { Network, Database } from 'lucide-react';
+import { Database } from 'lucide-react';
 
-export default function PresetSelector({
-  activePresetKey,
-  onSelectPreset,
-  nodeCount,
-  edgeCount
-}) {
+export default function PresetSelector({ activePresetKey, onSelectPreset }) {
   const presetKeys = Object.keys(presets);
 
   return (
-    <div className="bg-white p-4 rounded-2xl border border-green-50 shadow-sm">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
-        <Database className="h-3.5 w-3.5 text-green-500" />
-        Load Network presets
+    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-4">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2 border-b border-gray-50 pb-2">
+        <Database className="h-4 w-4 text-indigo-500" />
+        Select a Network To Begin
       </h3>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {presetKeys.map(key => {
           const preset = presets[key];
           const isActive = activePresetKey === key;
@@ -25,46 +20,48 @@ export default function PresetSelector({
           const edgeNum = preset.edges.length;
 
           return (
-            <button
+            <div
               key={key}
               onClick={() => onSelectPreset(key)}
-              className={`w-full text-left p-3 rounded-xl border transition-all flex flex-col gap-1.5 ${
+              className={`group relative overflow-hidden w-full text-left p-4 rounded-xl border transition-all duration-300 ease-in-out cursor-pointer flex flex-col gap-2 ${
                 isActive
-                  ? 'bg-green-50/50 border-green-200 ring-2 ring-green-500/10'
-                  : 'bg-slate-50 border-slate-100 hover:bg-slate-100/70 hover:border-slate-200 text-slate-700'
+                  ? 'bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-500/20'
+                  : 'bg-white border-gray-100 hover:scale-[1.01] hover:shadow-md hover:border-indigo-200'
               }`}
             >
-              <div className="flex items-center justify-between w-full">
-                <span className={`text-xs font-bold ${isActive ? 'text-green-700 font-extrabold' : 'text-slate-700'}`}>
+              {/* Decorative absolute top border scaling in on hover */}
+              <div 
+                className={`absolute top-0 left-0 h-1 bg-indigo-500 transition-transform duration-300 origin-left ${
+                  isActive ? 'w-full scale-x-100' : 'w-full scale-x-0 group-hover:scale-x-100'
+                }`}
+              />
+              
+              <div className="flex items-center justify-between w-full mt-1">
+                <span className={`text-sm font-bold ${isActive ? 'text-indigo-700' : 'text-gray-700 group-hover:text-indigo-600'}`}>
                   {preset.name}
                 </span>
                 
-                {/* Meta details */}
-                <div className="flex gap-1.5 text-[9px] font-extrabold">
-                  <span className={`px-2 py-0.5 rounded-full ${isActive ? 'bg-green-200 text-green-800' : 'bg-slate-200 text-slate-600'}`}>
+                {/* Meta details with specific requested styling */}
+                <div className="flex gap-1.5 text-[0.65rem]">
+                  <span className={`px-2 py-0.5 rounded-md border ${
+                    isActive ? 'bg-indigo-100 text-indigo-700 border-indigo-200 font-bold' : 'bg-slate-100 text-slate-700 border-slate-200 font-medium'
+                  }`}>
                     {nodeNum} Pins
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full ${isActive ? 'bg-green-200 text-green-800' : 'bg-slate-200 text-slate-600'}`}>
+                  <span className={`px-2 py-0.5 rounded-md border ${
+                    isActive ? 'bg-indigo-100 text-indigo-700 border-indigo-200 font-bold' : 'bg-slate-100 text-slate-700 border-slate-200 font-medium'
+                  }`}>
                     {edgeNum} Roads
                   </span>
                 </div>
               </div>
               
-              <p className="text-[10px] leading-relaxed text-slate-500 font-medium">
+              <p className={`text-xs leading-relaxed font-medium ${isActive ? 'text-indigo-900/70' : 'text-gray-500'}`}>
                 {preset.description}
               </p>
-            </button>
+            </div>
           );
         })}
-      </div>
-      
-      {/* Current Network Summary stats */}
-      <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-500">
-        <span>Active Map Capacity:</span>
-        <div className="flex gap-2">
-          <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">{nodeCount} Nodes</span>
-          <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">{edgeCount} Edges</span>
-        </div>
       </div>
     </div>
   );
