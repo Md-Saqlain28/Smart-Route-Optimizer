@@ -26,220 +26,241 @@ export default function AlgorithmSelector({
   const hasTarget = targetNodeId !== null;
 
   return (
-    <div className="bg-white p-4 rounded-2xl border border-red-50 shadow-sm flex flex-col gap-4">
+    <div className="bg-[#0a0a0a]/80 border border-neutral-900 p-5 rounded-2xl shadow-xl flex flex-col gap-4">
       {/* 1. Header */}
-      <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-        <Zap className="h-3.5 w-3.5 text-indigo-500" />
-        Routing Optimization Solvers
+      <h3 className="text-sm font-extrabold uppercase tracking-wider text-neutral-400 flex items-center gap-2 border-b border-neutral-900/50 pb-2">
+        <Sliders className="h-4 w-4 text-rose-400" />
+        Select Route Solver
       </h3>
 
       {/* 2. Algorithm Cards */}
       <div className="flex flex-col gap-2">
-        {/* Dijkstra */}
+        {/* CARD 1: Dijkstra */}
         <button
           onClick={() => {
             onReset();
             setSelectedAlgo('dijkstra');
           }}
-          className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1 ${
+          disabled={isPlaying}
+          className={`group relative text-left p-3.5 rounded-xl border transition-all duration-300 ${
             selectedAlgo === 'dijkstra'
-              ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-100'
-              : 'bg-white border-gray-100 hover:bg-gray-50/70 hover:border-gray-200 text-gray-700'
-          }`}
+              ? 'bg-cyan-950/40 border-cyan-500/50 ring-1 ring-cyan-500/30 shadow-md shadow-cyan-950/20'
+              : 'bg-black/40 border-neutral-900 hover:border-cyan-500/30 hover:bg-neutral-900/40'
+          } ${isPlaying ? 'opacity-65 cursor-not-allowed' : 'cursor-pointer'}`}
         >
           <div className="flex items-center justify-between w-full">
-            <span className="text-sm font-bold flex items-center gap-1.5">
+            <span className={`text-sm font-bold flex items-center gap-1.5 ${selectedAlgo === 'dijkstra' ? 'text-cyan-300' : 'text-slate-300'}`}>
               <GitCommit className="h-4 w-4" />
-              Dijkstra's Single Path (Greedy)
+              Dijkstra Route Finder
             </span>
-            <span className={`text-[0.8rem] font-bold px-2 py-0.5 rounded-full ${
-              selectedAlgo === 'dijkstra' ? 'bg-white/20 text-white' : 'bg-cyan-50 text-cyan-700'
+            <span className={`text-[0.7rem] font-bold px-2 py-0.5 rounded-full border ${
+              selectedAlgo === 'dijkstra' ? 'bg-cyan-950/60 text-cyan-300 border-cyan-500/30' : 'bg-neutral-900/60 text-neutral-400 border-neutral-900'
             }`}>
               O(E log V)
             </span>
           </div>
-          <p className={`text-xs leading-relaxed font-medium ${selectedAlgo === 'dijkstra' ? 'text-cyan-100' : 'text-gray-500'}`}>
+          <p className={`text-xs mt-1.5 leading-relaxed font-medium ${selectedAlgo === 'dijkstra' ? 'text-slate-300' : 'text-neutral-500'}`}>
             Finds the absolute shortest path from the central Hub to a selected Customer. Perfect for immediate direct dispatching.
           </p>
         </button>
 
-        {/* Prim's MST */}
+        {/* CARD 2: Prim */}
         <button
           onClick={() => {
             onReset();
             setSelectedAlgo('prim');
           }}
-          className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1 ${
+          disabled={isPlaying}
+          className={`group relative text-left p-3.5 rounded-xl border transition-all duration-300 ${
             selectedAlgo === 'prim'
-              ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-100'
-              : 'bg-white border-gray-100 hover:bg-gray-50/70 hover:border-gray-200 text-gray-700'
-          }`}
+              ? 'bg-emerald-950/40 border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-md shadow-emerald-950/20'
+              : 'bg-black/40 border-neutral-900 hover:border-emerald-500/30 hover:bg-neutral-900/40'
+          } ${isPlaying ? 'opacity-65 cursor-not-allowed' : 'cursor-pointer'}`}
         >
           <div className="flex items-center justify-between w-full">
-            <span className="text-sm font-bold flex items-center gap-1.5">
+            <span className={`text-sm font-bold flex items-center gap-1.5 ${selectedAlgo === 'prim' ? 'text-emerald-300' : 'text-slate-300'}`}>
               <NetworkIcon className="h-4 w-4" />
-              Prim's Minimum Spanning Tree
+              Prim's Spanning Network
             </span>
-            <span className={`text-[0.8rem] font-bold px-2 py-0.5 rounded-full ${
-              selectedAlgo === 'prim' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700'
+            <span className={`text-[0.7rem] font-bold px-2 py-0.5 rounded-full border ${
+              selectedAlgo === 'prim' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30' : 'bg-neutral-900/60 text-neutral-400 border-neutral-900'
             }`}>
               O(E log V)
             </span>
           </div>
-          <p className={`text-xs leading-relaxed font-medium ${selectedAlgo === 'prim' ? 'text-emerald-100' : 'text-gray-500'}`}>
+          <p className={`text-xs mt-1.5 leading-relaxed font-medium ${selectedAlgo === 'prim' ? 'text-slate-300' : 'text-neutral-500'}`}>
             Identifies the cheapest network design to connect all locations together. Saves costs on establishing highway trunks.
           </p>
         </button>
 
-        {/* TSP */}
+        {/* CARD 3: TSP Loop */}
         <button
           onClick={() => {
             onReset();
             setSelectedAlgo('tsp');
           }}
-          className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1 ${
+          disabled={isPlaying}
+          className={`group relative text-left p-3.5 rounded-xl border transition-all duration-300 ${
             selectedAlgo === 'tsp'
-              ? 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-100'
-              : 'bg-white border-gray-100 hover:bg-gray-50/70 hover:border-gray-200 text-gray-700'
-          }`}
+              ? 'bg-amber-950/40 border-amber-500/50 ring-1 ring-amber-500/30 shadow-md shadow-amber-950/20'
+              : 'bg-black/40 border-neutral-900 hover:border-amber-500/30 hover:bg-neutral-900/40'
+          } ${isPlaying ? 'opacity-65 cursor-not-allowed' : 'cursor-pointer'}`}
         >
           <div className="flex items-center justify-between w-full">
-            <span className="text-sm font-bold flex items-center gap-1.5">
+            <span className={`text-sm font-bold flex items-center gap-1.5 ${selectedAlgo === 'tsp' ? 'text-amber-300' : 'text-slate-300'}`}>
               <LoopIcon className="h-4 w-4" />
-              TSP Multi-Stop Loop (NP-Hard)
+              TSP Delivery Loop
             </span>
-            <span className={`text-[0.8rem] font-bold px-2 py-0.5 rounded-full ${
-              selectedAlgo === 'tsp' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-700'
+            <span className={`text-[0.7rem] font-bold px-2 py-0.5 rounded-full border ${
+              selectedAlgo === 'tsp' ? 'bg-amber-950/60 text-amber-300 border-amber-500/30' : 'bg-neutral-900/60 text-neutral-400 border-neutral-900'
             }`}>
-              O(N!) vs O(N<sup>2</sup> 2<sup>N</sup>)
+              O(N² 2ᴺ)
             </span>
           </div>
-          <p className={`text-xs leading-relaxed font-medium ${selectedAlgo === 'tsp' ? 'text-amber-100' : 'text-gray-500'}`}>
+          <p className={`text-xs mt-1.5 leading-relaxed font-medium ${selectedAlgo === 'tsp' ? 'text-slate-300' : 'text-neutral-500'}`}>
             Solves the absolute best multi-stop delivery run. Starts and ends at the Hub, visiting all customer pins exactly once.
           </p>
         </button>
       </div>
 
-      {/* 3. Warnings / Missing Prerequisites Banner */}
+      {/* 3. Prerequisite Warnings */}
       {selectedAlgo === 'dijkstra' && (!hasHub || !hasTarget) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2 animate-pulse">
-          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs leading-relaxed text-amber-700 font-semibold">
-            {!hasHub && "Prerequisite Missing: Set a Location as Hub (using the Select tool) first!"}
-            {hasHub && !hasTarget && "Prerequisite Missing: Set a Location as Customer Destination first!"}
-          </div>
+        <div className="bg-amber-950/30 border border-amber-500/30 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
+          <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400" />
+          <span>
+            {!hasHub && "Prerequisite Missing: Set a Location as Hub (using location context menu) first!"}
+            {hasHub && !hasTarget && "Prerequisite Missing: Set a Destination Node inside the canvas first!"}
+          </span>
         </div>
       )}
 
       {selectedAlgo === 'prim' && !hasHub && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2 animate-pulse">
-          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs leading-relaxed text-amber-700 font-semibold">
-            Prerequisite Missing: Specify a Location as Hub first!
-          </div>
+        <div className="bg-amber-950/30 border border-amber-500/30 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
+          <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400" />
+          <span>Prerequisite Missing: Specify a Location as Hub first!</span>
         </div>
       )}
 
       {selectedAlgo === 'tsp' && !hasHub && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2 animate-pulse">
-          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs leading-relaxed text-amber-700 font-semibold">
-            Prerequisite Missing: Specify a Location as Hub first!
-          </div>
+        <div className="bg-amber-950/30 border border-amber-500/30 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
+          <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400" />
+          <span>Prerequisite Missing: Specify a Location as Hub first!</span>
         </div>
       )}
 
-      {/* 4. Playback Controls */}
-      <div className="pt-2 border-t border-gray-100 flex flex-col gap-3">
+      {selectedAlgo === 'tsp' && nodes.length > 10 && (
+        <div className="bg-red-950/30 border border-red-500/30 text-red-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed">
+          <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-red-400" />
+          <span>Held-Karp TSP has exponential complexity. Running with &gt;10 locations will run slow in JavaScript.</span>
+        </div>
+      )}
+
+      {/* 4. Controls & Steppers */}
+      <div className="flex flex-col gap-3.5 bg-black/80 p-4 rounded-xl border border-neutral-900">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => onStepBackward()}
-              disabled={currentStepIndex <= 0 || isPlaying}
-              className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
-              title="Previous Step"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
+          <span className="text-xs font-extrabold text-neutral-500 uppercase">Solver Stepper</span>
+          <span className="text-xs font-mono font-bold text-neutral-300 bg-neutral-950 border border-neutral-900 px-2 py-0.5 rounded">
+            {totalSteps > 0 ? `${currentStepIndex + 1} / ${totalSteps}` : '0/0'}
+          </span>
+        </div>
 
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              disabled={
-                selectedAlgo === 'dijkstra' && (!hasHub || !hasTarget) ||
-                (selectedAlgo === 'prim' && !hasHub) ||
-                (selectedAlgo === 'tsp' && !hasHub) ||
-                totalSteps <= 0
-              }
-              className={`p-2 rounded-xl text-white shadow-sm transition-all flex items-center justify-center ${
-                isPlaying
-                  ? 'bg-amber-500 hover:bg-amber-600'
-                  : 'bg-indigo-600 hover:bg-emerald-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none'
-              }`}
-            >
-              {isPlaying ? <Pause className="h-4.5 w-4.5" /> : <Play className="h-4.5 w-4.5 fill-current" />}
-            </button>
-
-            <button
-              onClick={() => onStepForward()}
-              disabled={currentStepIndex >= totalSteps - 1 || isPlaying}
-              className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
-              title="Next Step"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-
-            <button
-              onClick={onReset}
-              className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors"
-              title="Reset Animation"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
+        {/* STEP PROGRESS DESCRIPTION CARD */}
+        {totalSteps > 0 && (
+          <div className="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 flex flex-col gap-2">
+            <div className="w-full bg-black h-1.5 rounded-full overflow-hidden border border-neutral-900">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  selectedAlgo === 'dijkstra' ? 'bg-cyan-500' : selectedAlgo === 'prim' ? 'bg-emerald-500' : 'bg-amber-500'
+                }`}
+                style={{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%` }}
+              ></div>
+            </div>
+            <p className="text-xs leading-relaxed text-slate-300 font-semibold mt-1">
+              {stepDescription || "Press play or step next to begin routing simulation."}
+            </p>
           </div>
+        )}
 
-          {/* Speed Slider */}
-          <div className="flex items-center gap-2 max-w-[120px] w-full">
-            <Sliders className="h-3.5 w-3.5 text-gray-400" />
+        {/* STEP PLAYBACK BUTTONS */}
+        <div className="flex items-center justify-between gap-1.5">
+          <button
+            onClick={onStepBackward}
+            disabled={isPlaying || currentStepIndex <= 0 || totalSteps === 0}
+            className="p-2.5 rounded-xl border border-neutral-900 bg-neutral-950 text-neutral-300 hover:bg-neutral-900 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="Step Backward"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            disabled={
+              (selectedAlgo === 'dijkstra' && (!hasHub || !hasTarget)) ||
+              (selectedAlgo === 'prim' && !hasHub) ||
+              (selectedAlgo === 'tsp' && !hasHub) ||
+              totalSteps <= 0
+            }
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-extrabold transition-all border ${
+              isPlaying
+                ? 'bg-red-950/40 border-red-500/50 text-red-400 hover:bg-red-950/60 shadow-lg shadow-red-950/30'
+                : selectedAlgo === 'dijkstra'
+                ? 'bg-cyan-600 border-cyan-500 text-white shadow-lg shadow-cyan-900/20 hover:bg-cyan-500'
+                : selectedAlgo === 'prim'
+                ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-500'
+                : 'bg-amber-600 border-amber-600 text-white shadow-lg shadow-amber-900/20 hover:bg-amber-500'
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="h-4 w-4 fill-current" />
+                Pause Solver
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 fill-current" />
+                Solve Optimally
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={onStepForward}
+            disabled={isPlaying || currentStepIndex >= totalSteps - 1 || totalSteps === 0}
+            className="p-2.5 rounded-xl border border-neutral-900 bg-neutral-950 text-neutral-300 hover:bg-neutral-900 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="Step Forward"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* STEPPING SPEED CONTROL */}
+        <div className="flex items-center justify-between gap-2.5 mt-1 border-t border-neutral-900/60 pt-3">
+          <span className="text-xs font-extrabold text-neutral-500 uppercase">Playback Speed</span>
+          <div className="flex items-center gap-2">
             <input
               type="range"
-              min="100"
+              min="200"
               max="2000"
-              step="100"
+              step="200"
               value={playbackSpeed}
-              onChange={(e) => setPlaybackSpeed(parseInt(e.target.value))}
-              className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-              title="Adjust Step Playback Delay"
+              onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+              className="w-20 h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
             />
-            <span className="text-[0.7rem] font-bold text-gray-400 whitespace-nowrap min-w-[32px] text-right">
+            <span className="text-[0.65rem] font-mono font-bold text-neutral-400 w-10 text-right">
               {playbackSpeed}ms
             </span>
           </div>
         </div>
 
-        {/* Step Progress & Message */}
-        {totalSteps > 0 && (
-          <div className="bg-white border border-gray-100 rounded-xl p-3 flex flex-col gap-2">
-            <div className="flex items-center justify-between text-xs font-extrabold text-gray-500">
-              <span className="uppercase text-indigo-500">Solver Stepper</span>
-              <span>
-                Step {currentStepIndex + 1} / {totalSteps}
-              </span>
-            </div>
-            
-            {/* Step Progress Bar */}
-            <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-indigo-600 h-full transition-all duration-300"
-                style={{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%` }}
-              ></div>
-            </div>
-
-            {/* Stepper Description */}
-            <p className="text-xs leading-relaxed text-gray-600 font-semibold mt-1">
-              {stepDescription || "Press play or step next to begin routing simulation."}
-            </p>
-          </div>
-        )}
+        {/* RESET STEPPER BUTTON */}
+        <button
+          onClick={onReset}
+          disabled={totalSteps === 0}
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold text-neutral-400 hover:text-rose-400 bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 transition-colors disabled:opacity-40"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Reset Path Visualizer
+        </button>
       </div>
     </div>
   );

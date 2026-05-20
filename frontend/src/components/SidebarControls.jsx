@@ -99,9 +99,9 @@ export default function SidebarControls({
   return (
     <div className="flex flex-col gap-4">
       {/* 1. Tool Selection */}
-      <div className="bg-white p-4 rounded-2xl border border-indigo-50 shadow-sm">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
-          <Move className="h-3.5 w-3.5 text-indigo-500" />
+      <div className="bg-[#0a0a0a]/80 border border-neutral-900 p-4 rounded-2xl shadow-xl">
+        <h3 className="text-sm font-extrabold uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-1.5">
+          <Move className="h-3.5 w-3.5 text-rose-400" />
           Canvas Work Tools
         </h3>
         
@@ -111,8 +111,8 @@ export default function SidebarControls({
             onClick={() => setCanvasMode('select')}
             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${
               canvasMode === 'select'
-                ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
-                : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50/70'
+                ? 'bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-950/45'
+                : 'bg-black/40 border-neutral-900 text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
             }`}
           >
             <Move className="h-4 w-4 shrink-0" />
@@ -124,8 +124,8 @@ export default function SidebarControls({
             onClick={() => setCanvasMode('addNode')}
             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${
               canvasMode === 'addNode'
-                ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
-                : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50/70'
+                ? 'bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-950/45'
+                : 'bg-black/40 border-neutral-900 text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
             }`}
           >
             <PlusCircle className="h-4 w-4 shrink-0" />
@@ -137,8 +137,8 @@ export default function SidebarControls({
             onClick={() => setCanvasMode('connect')}
             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${
               canvasMode === 'connect'
-                ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
-                : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50/70'
+                ? 'bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-950/45'
+                : 'bg-black/40 border-neutral-900 text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
             }`}
           >
             <Link className="h-4 w-4 shrink-0" />
@@ -150,8 +150,8 @@ export default function SidebarControls({
             onClick={() => setCanvasMode('delete')}
             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${
               canvasMode === 'delete'
-                ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-50'
-                : 'bg-white border-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100'
+                ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-950/45'
+                : 'bg-black/40 border-neutral-900 text-neutral-400 hover:bg-red-950/20 hover:text-red-400 hover:border-red-950/30'
             }`}
           >
             <Trash2 className="h-4 w-4 shrink-0" />
@@ -160,9 +160,9 @@ export default function SidebarControls({
         </div>
 
         {/* Dynamic Instructional Helper text */}
-        <div className="mt-3.5 bg-white border border-gray-100 rounded-xl p-2.5 flex gap-2">
-          <HelpCircle className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
-          <p className="text-xs leading-relaxed text-gray-500 font-medium">
+        <div className="mt-3.5 bg-black/40 border border-neutral-900 rounded-xl p-2.5 flex gap-2">
+          <HelpCircle className="h-4 w-4 text-neutral-500 shrink-0 mt-0.5" />
+          <p className="text-xs leading-relaxed text-neutral-400 font-medium">
             {canvasMode === 'select' && "Click a location to edit details. Grab and drag locations to rearrange the route topology."}
             {canvasMode === 'addNode' && "Click anywhere on the grid canvas to place a new delivery node."}
             {canvasMode === 'connect' && "Click Node A and then click Node B to draw a road. Enter custom distance weights in kilometers."}
@@ -173,13 +173,13 @@ export default function SidebarControls({
 
       {/* 2. Selected Node Inspector */}
       {selectedNode ? (
-        <div className="bg-white p-4 rounded-2xl border border-indigo-50 shadow-sm animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
-            <h3 className="text-sm font-extrabold uppercase tracking-wider text-indigo-500 flex items-center gap-1.5">
+        <div className="bg-[#0a0a0a]/80 border border-neutral-900 p-4 rounded-2xl shadow-xl animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="flex items-center justify-between border-b border-neutral-900/60 pb-3 mb-3">
+            <h3 className="text-sm font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
               <MapPin className="h-4 w-4" />
               Location Inspector
             </h3>
-            <span className="text-xs font-bold bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-bold bg-black text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-900">
               ID: {selectedNode.id}
             </span>
           </div>
@@ -187,21 +187,21 @@ export default function SidebarControls({
           <div className="flex flex-col gap-3">
             {/* Label Edit */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
+              <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">
                 Location Name
               </label>
               <input
                 type="text"
                 value={selectedNode.label}
                 onChange={handleLabelChange}
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:bg-white text-gray-700 transition-all"
+                className="w-full px-3 py-2 bg-black border border-neutral-900 focus:border-rose-500 rounded-xl text-sm font-semibold focus:outline-none text-slate-200 transition-all"
               />
             </div>
 
             {/* Coordinates display */}
-            <div className="flex gap-4 text-xs font-semibold text-gray-400 bg-white px-3 py-2 rounded-xl border border-gray-100">
-              <div>X-Coord: <span className="text-gray-600 font-bold">{selectedNode.x}px</span></div>
-              <div>Y-Coord: <span className="text-gray-600 font-bold">{selectedNode.y}px</span></div>
+            <div className="flex gap-4 text-xs font-semibold text-neutral-400 bg-black px-3 py-2 rounded-xl border border-neutral-900">
+              <div>X-Coord: <span className="text-slate-200 font-bold">{selectedNode.x}px</span></div>
+              <div>Y-Coord: <span className="text-slate-200 font-bold">{selectedNode.y}px</span></div>
             </div>
 
             {/* Actions Grid */}
@@ -212,8 +212,8 @@ export default function SidebarControls({
                 disabled={selectedNode.id === hubNodeId}
                 className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
                   selectedNode.id === hubNodeId
-                    ? 'bg-indigo-50 border-indigo-100 text-indigo-600 cursor-not-allowed'
-                    : 'bg-white border-gray-200 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100'
+                    ? 'bg-rose-950/30 border-rose-500/20 text-rose-300 cursor-not-allowed'
+                    : 'bg-black border border-neutral-900 text-neutral-300 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
                 <Home className="h-3.5 w-3.5 shrink-0" />
@@ -226,10 +226,10 @@ export default function SidebarControls({
                 disabled={selectedNode.id === hubNodeId || selectedNode.id === targetNodeId}
                 className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
                   selectedNode.id === targetNodeId
-                    ? 'bg-indigo-50 border-indigo-100 text-indigo-600 cursor-not-allowed'
+                    ? 'bg-rose-950/30 border-rose-500/20 text-rose-300 cursor-not-allowed'
                     : selectedNode.id === hubNodeId
-                    ? 'opacity-40 bg-white border-gray-200 text-gray-300 cursor-not-allowed'
-                    : 'bg-white border-gray-200 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100'
+                    ? 'opacity-40 bg-black border-neutral-900 text-neutral-700 cursor-not-allowed'
+                    : 'bg-black border border-neutral-900 text-neutral-300 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -240,7 +240,7 @@ export default function SidebarControls({
             {/* Delete Location */}
             <button
               onClick={handleDeleteNode}
-              className="flex items-center justify-center gap-2 py-2 px-3 mt-1 rounded-xl text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100/70 border border-indigo-100 transition-all"
+              className="flex items-center justify-center gap-2 py-2 px-3 mt-1 rounded-xl text-xs font-bold text-red-400 bg-red-950/20 hover:bg-red-950/40 border border-red-950/30 transition-all"
             >
               <Trash2 className="h-3.5 w-3.5 shrink-0" />
               Remove Location
@@ -248,12 +248,12 @@ export default function SidebarControls({
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-dashed border-indigo-100 rounded-2xl p-6 text-center shadow-inner">
-          <MapPin className="h-8 w-8 text-gray-300 mx-auto mb-2 animate-pulse-slow" />
-          <p className="text-sm font-semibold text-gray-400">
+        <div className="bg-black/30 border border-dashed border-neutral-800 rounded-2xl p-6 text-center shadow-inner">
+          <MapPin className="h-8 w-8 text-neutral-600 mx-auto mb-2 animate-pulse-slow" />
+          <p className="text-sm font-semibold text-neutral-400">
             No Location Selected
           </p>
-          <p className="text-xs leading-relaxed text-gray-400 mt-1 max-w-[180px] mx-auto">
+          <p className="text-xs leading-relaxed text-neutral-500 mt-1 max-w-[180px] mx-auto">
             Click on a customer pin inside the grid to edit its labels or assign roles.
           </p>
         </div>
@@ -263,7 +263,7 @@ export default function SidebarControls({
       <div className="mt-auto pt-2">
         <button
           onClick={handleClearAll}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-gray-400 hover:text-indigo-500 bg-gray-50 hover:bg-indigo-50/70 border border-gray-100 hover:border-indigo-100 transition-all shadow-sm"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-neutral-400 hover:text-red-400 bg-neutral-950/50 hover:bg-red-950/20 border border-neutral-900 hover:border-red-950/40 transition-all shadow-md"
         >
           <Trash2 className="h-4 w-4" />
           Clear Canvas Network
