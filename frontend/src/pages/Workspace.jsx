@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import GraphCanvas from '../components/GraphCanvas';
 import SidebarControls from '../components/SidebarControls';
@@ -11,7 +11,7 @@ import {
   solveTSPBruteForce, 
   solveTSPDynamicProgramming
 } from '../utils/algorithms';
-import { Navigation, Info, ArrowLeft } from 'lucide-react';
+import { Navigation, Info, ArrowLeft, Terminal, ChevronUp, ChevronDown } from 'lucide-react';
 
 export default function Workspace() {
   const location = useLocation();
@@ -51,6 +51,11 @@ export default function Workspace() {
 
   // Toast notification state
   const [toasts, setToasts] = useState([]);
+
+  // Console drawer state
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const terminalEndRef = useRef(null);
+  const terminalContainerRef = useRef(null);
 
   // Toast Helper
   const showToast = (message) => {
@@ -441,22 +446,87 @@ export default function Workspace() {
           />
         </div>
 
-        {/* Right Side: Analytics and Factorial console (3 Cols) */}
-        <div className="lg:col-span-3 h-full">
+        {/* Right Side: Analytics (3 Cols) */}
+        <div className="lg:col-span-3 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:sticky lg:top-[88px] custom-scrollbar">
           <AnalyticsPanel
             nodeCount={nodes.length}
             selectedAlgo={selectedAlgo}
             dijkstraResult={dijkstraResult}
             primResult={primResult}
             tspResult={tspResult}
-            executionLog={executionLog}
             nodes={nodes}
           />
         </div>
       </main>
 
-      {/* 3. Toast Notifications Overlay */}
-      <div className="fixed bottom-5 right-5 flex flex-col gap-2 z-50">
+      {/* 3. Fixed Bottom Console Drawer */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ease-in-out ${
+          isConsoleOpen ? 'h-[280px]' : 'h-[44px]'
+        }`}
+      >
+        {/* Console Header Bar */}
+        <div
+          className="bg-gray-950 px-5 py-2.5 border-t border-gray-700 flex items-center justify-between cursor-pointer hover:bg-gray-900 transition-colors select-none"
+          onClick={() => {
+            setIsConsoleOpen(!isConsoleOpen);
+            // Auto-scroll to bottom when opening
+            if (!isConsoleOpen) {
+              setTimeout(() => {
+                terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }
+          }}
+        >
+          <span className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-wider">
+            <Terminal className="h-3.5 w-3.5 text-green-400" />
+            Algorithmic Stepper Console
+            {executionLog.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-gray-800 text-green-400 text-[0.65rem] font-bold border border-gray-700">
+                {executionLog.length} steps
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-3">
+            {isConsoleOpen && executionLog.length > 0 && (
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-ping"></span>
+            )}
+            {isConsoleOpen ? (
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            ) : (
+              <ChevronUp className="h-4 w-4 text-gray-400" />
+            )}
+          </div>
+        </div>
+
+        {/* Console Body */}
+        {isConsoleOpen && (
+          <div
+            ref={terminalContainerRef}
+            className="bg-gray-900 h-[calc(100%-44px)] overflow-y-auto p-4 font-mono text-[0.75rem] text-gray-300 flex flex-col gap-1.5 border-t border-gray-800"
+          >
+            {executionLog.length === 0 ? (
+              <div className="text-gray-500 italic text-center my-auto">
+                CONSOLE STANDBY — Run an optimization solver to view step-by-step operations.
+              </div>
+            ) : (
+              executionLog.map((log, index) => (
+                <div
+                  key={index}
+                  className="flex gap-2.5 leading-relaxed select-text py-1 border-b border-gray-800/40 last:border-0"
+                >
+                  <span className="text-green-400 font-bold shrink-0 w-8 text-right">[{index + 1}]</span>
+                  <span className="text-gray-300">{log}</span>
+                </div>
+              ))
+            )}
+            <div ref={terminalEndRef}></div>
+          </div>
+        )}
+      </div>
+
+      {/* 4. Toast Notifications Overlay */}
+      <div className={`fixed right-5 flex flex-col gap-2 z-50 transition-all duration-300 ${isConsoleOpen ? 'bottom-[300px]' : 'bottom-16'}`}>
         {toasts.map(t => (
           <div
             key={t.id}
@@ -467,17 +537,6 @@ export default function Workspace() {
           </div>
         ))}
       </div>
-
-      {/* 4. Footer */}
-      <footer className="bg-gray-50 border-t border-gray-200 py-4 px-6 text-center text-[0.8rem] font-bold text-gray-400 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>LogiRoute Engine — Applied Analysis of Greedy and NP-Hard Graph Paradigms.</span>
-          <div className="flex gap-4">
-            <span className="hover:text-gray-600 transition-colors cursor-pointer">Theoretical Proofs</span>
-            <span className="hover:text-gray-600 transition-colors cursor-pointer">Held-Karp Space Matrix</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
