@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GraphCanvas from './components/GraphCanvas';
 import SidebarControls from './components/SidebarControls';
 import PresetSelector from './components/PresetSelector';
@@ -11,7 +11,7 @@ import {
   solveTSPBruteForce, 
   solveTSPDynamicProgramming
 } from './utils/algorithms';
-import { Navigation, Info } from 'lucide-react';
+import { Navigation, Info, Terminal, ChevronUp, ChevronDown } from 'lucide-react';
 
 export default function App() {
   const initialPresetKey = 'downtown_5';
@@ -42,6 +42,11 @@ export default function App() {
   const [highlightedEdges, setHighlightedEdges] = useState({});
 
   const [toasts, setToasts] = useState([]);
+
+  // Console drawer state
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const terminalEndRef = useRef(null);
+  const terminalContainerRef = useRef(null);
 
   const showToast = (message) => {
     const id = Date.now();
@@ -296,24 +301,24 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gray-50 flex antialiased">
+    <div className="h-screen w-screen overflow-hidden bg-black text-slate-100 flex antialiased">
       {/* 1. LEFT SIDEBAR (Fixed Width: 380px) */}
-      <div className="w-[380px] h-full flex flex-col bg-white border-r border-gray-200 shadow-sm z-20 shrink-0">
-        <header className="p-5 border-b border-gray-100 flex items-center gap-3 shrink-0">
-          <div className="bg-indigo-600 p-2.5 rounded-xl shadow-md shadow-indigo-200 flex items-center justify-center text-white">
+      <div className="w-[380px] h-full flex flex-col bg-[#0a0a0a]/90 backdrop-blur-lg border-r border-neutral-900 shadow-2xl z-20 shrink-0">
+        <header className="p-5 border-b border-neutral-900/60 flex items-center gap-3 shrink-0">
+          <div className="bg-rose-500/10 border border-rose-500/25 p-2.5 rounded-xl shadow-lg shadow-rose-950/20 flex items-center justify-center text-rose-400">
             <Navigation className="h-6 w-6 rotate-45" />
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-gray-800 flex items-center gap-2">
+            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
               LogiRoute
             </h1>
-            <p className="text-[0.75rem] font-medium text-gray-500 mt-0.5 tracking-wide leading-tight">
+            <p className="text-[0.75rem] font-semibold text-neutral-400 mt-0.5 tracking-wide leading-tight">
               Interactive route optimization and graph algorithm visualizer.
             </p>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 custom-scrollbar pb-10">
+        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 custom-scrollbar transition-all duration-300" style={{ paddingBottom: isConsoleOpen ? 300 : 80 }}>
           <PresetSelector
             activePresetKey={activePresetKey}
             onSelectPreset={loadPreset}
@@ -356,7 +361,7 @@ export default function App() {
       </div>
 
       {/* 2. CENTER CANVAS (Flex-1) */}
-      <main className="flex-1 h-full relative bg-gray-50 flex flex-col overflow-hidden">
+      <main className="flex-1 h-full relative bg-black flex flex-col overflow-hidden">
         <GraphCanvas
           nodes={nodes}
           edges={edges}
@@ -377,26 +382,91 @@ export default function App() {
       </main>
 
       {/* 3. RIGHT SIDEBAR (Fixed Width: 350px) */}
-      <div className="w-[360px] h-full bg-white border-l border-gray-200 shadow-sm overflow-y-auto p-5 z-20 shrink-0 custom-scrollbar">
+      <div className="w-[360px] h-full bg-[#0a0a0a]/90 backdrop-blur-lg border-l border-neutral-900 shadow-2xl overflow-y-auto p-5 z-20 shrink-0 custom-scrollbar transition-all duration-300" style={{ paddingBottom: isConsoleOpen ? 300 : 80 }}>
         <AnalyticsPanel
           nodeCount={nodes.length}
           selectedAlgo={selectedAlgo}
           dijkstraResult={dijkstraResult}
           primResult={primResult}
           tspResult={tspResult}
-          executionLog={executionLog}
           nodes={nodes}
+          isAlgoFinished={algoSteps.length > 0 && currentStepIndex === algoSteps.length - 1}
         />
       </div>
 
-      {/* 4. Toast Notifications Overlay */}
-      <div className="fixed bottom-5 left-[400px] flex flex-col gap-2 z-50 pointer-events-none">
+      {/* 4. Fixed Bottom Console Drawer */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+          isConsoleOpen ? 'h-[280px]' : 'h-[44px]'
+        }`}
+      >
+        {/* Console Header Bar */}
+        <div
+          className="bg-[#050505] px-5 py-2.5 border-t border-neutral-900 flex items-center justify-between cursor-pointer hover:bg-neutral-900 transition-colors select-none h-[44px]"
+          onClick={() => {
+            setIsConsoleOpen(!isConsoleOpen);
+            if (!isConsoleOpen) {
+              setTimeout(() => {
+                terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }, 150);
+            }
+          }}
+        >
+          <span className="flex items-center gap-2 text-xs font-black text-neutral-400 uppercase tracking-wider">
+            <Terminal className="h-3.5 w-3.5 text-green-400" />
+            Algorithmic Stepper Console
+            {executionLog.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-black text-green-400 text-[0.65rem] font-bold border border-neutral-900">
+                {executionLog.length} steps
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-3">
+            {isConsoleOpen && executionLog.length > 0 && (
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-ping"></span>
+            )}
+            {isConsoleOpen ? (
+              <ChevronDown className="h-4 w-4 text-neutral-400" />
+            ) : (
+              <ChevronUp className="h-4 w-4 text-neutral-400" />
+            )}
+          </div>
+        </div>
+
+        {/* Console Body */}
+        {isConsoleOpen && (
+          <div
+            ref={terminalContainerRef}
+            className="bg-black/95 backdrop-blur-md h-[calc(100%-44px)] overflow-y-auto p-4 font-mono text-[0.75rem] text-neutral-300 flex flex-col gap-1.5 border-t border-neutral-900"
+          >
+            {executionLog.length === 0 ? (
+              <div className="text-neutral-500 italic text-center my-auto">
+                CONSOLE STANDBY — Run an optimization solver to view step-by-step operations.
+              </div>
+            ) : (
+              executionLog.map((log, index) => (
+                <div
+                  key={index}
+                  className="flex gap-2.5 leading-relaxed select-text py-1 border-b border-neutral-900/40 last:border-0"
+                >
+                  <span className="text-green-400 font-bold shrink-0 w-8 text-right">[{index + 1}]</span>
+                  <span className="text-neutral-300">{log}</span>
+                </div>
+              ))
+            )}
+            <div ref={terminalEndRef}></div>
+          </div>
+        )}
+      </div>
+
+      {/* 5. Toast Notifications Overlay */}
+      <div className={`fixed left-[400px] flex flex-col gap-2 z-50 pointer-events-none transition-all duration-300 ${isConsoleOpen ? 'bottom-[300px]' : 'bottom-16'}`}>
         {toasts.map(t => (
           <div
             key={t.id}
-            className="bg-indigo-900 border border-indigo-800 text-white rounded-xl shadow-lg px-4 py-3 text-sm font-bold flex items-center gap-2 animate-in slide-in-from-bottom-5 fade-in duration-200 pointer-events-auto"
+            className="bg-[#0d0d0d]/90 backdrop-blur-md border border-rose-500/30 text-white rounded-xl shadow-lg shadow-rose-950/20 px-4 py-3 text-sm font-bold flex items-center gap-2 animate-in slide-in-from-bottom-5 fade-in duration-200 pointer-events-auto"
           >
-            <Info className="h-4.5 w-4.5 text-indigo-400 shrink-0" />
+            <Info className="h-4.5 w-4.5 text-rose-400 shrink-0" />
             <span>{t.message}</span>
           </div>
         ))}
