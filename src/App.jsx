@@ -68,6 +68,27 @@ export default function App() {
     }, 3500);
   };
 
+  const warningMsg = (() => {
+    if (selectedAlgo === "dijkstra") {
+      if (hubNodeId === null && targetNodeId === null) {
+        return "Please select a Hub and Destination to run Dijkstra.";
+      }
+      if (hubNodeId === null) {
+        return "Please select a Hub to run Dijkstra.";
+      }
+      if (targetNodeId === null) {
+        return "Please select a Destination to run Dijkstra.";
+      }
+    }
+    if (selectedAlgo === "prim" && hubNodeId === null) {
+      return "Please select a Hub to run Prim's MST.";
+    }
+    if (selectedAlgo === "tsp" && hubNodeId === null) {
+      return "Please select a Hub to run the TSP solver.";
+    }
+    return null;
+  })();
+
   const resetPlayback = () => {
     setIsPlaying(false);
     setCurrentStepIndex(0);
@@ -96,6 +117,10 @@ export default function App() {
     resetPlayback();
     showToast(`Loaded map preset: ${preset.name}`);
   };
+
+  useEffect(() => {
+    loadPreset(initialPresetKey);
+  }, []);
 
   useEffect(() => {
     if (nodes.length === 0) {
