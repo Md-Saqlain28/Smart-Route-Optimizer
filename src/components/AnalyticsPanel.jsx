@@ -1,8 +1,6 @@
-import React from 'react';
 import { BarChart3, Cpu, CheckCircle2, MapPin } from 'lucide-react';
 
 export default function AnalyticsPanel({
-  nodeCount,
   selectedAlgo,
   dijkstraResult,
   primResult,
@@ -319,12 +317,4 @@ export default function AnalyticsPanel({
   );
 }
 
-// Factorial Helper
-function factorial(num) {
-  if (num <= 1) return 1;
-  let res = 1;
-  for (let i = 2; i <= num; i++) {
-    res *= i;
-  }
-  return res;
-}
+

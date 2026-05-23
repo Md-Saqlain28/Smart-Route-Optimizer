@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
+import { useState, useEffect, useRef } from 'react';
 import GraphCanvas from './components/GraphCanvas';
-import SidebarControls from './components/SidebarControls';
-import PresetSelector from './components/PresetSelector';
-import AlgorithmSelector from './components/AlgorithmSelector';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import { presets } from './utils/presets';
 import { 
@@ -11,7 +9,7 @@ import {
   solveTSPBruteForce, 
   solveTSPDynamicProgramming
 } from './utils/algorithms';
-import { Navigation, Info, Terminal, ChevronUp, ChevronDown } from 'lucide-react';
+import { Navigation, Info, Terminal, ChevronUp, ChevronDown, Play, Pause, RotateCcw, ChevronLeft, ChevronRight, BarChart3, AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const initialPresetKey = 'downtown_5';
@@ -25,6 +23,7 @@ export default function App() {
   const [hubNodeId, setHubNodeId] = useState(null);
   const [targetNodeId, setTargetNodeId] = useState(null);
   const [activePresetKey, setActivePresetKey] = useState(initialPresetKey);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // --- 2. Optimization / Stepper State ---
   const [selectedAlgo, setSelectedAlgo] = useState('dijkstra');
@@ -56,9 +55,13 @@ export default function App() {
     }, 3500);
   };
 
-  useEffect(() => {
-    loadPreset(initialPresetKey);
-  }, []);
+  const resetPlayback = () => {
+    setIsPlaying(false);
+    setCurrentStepIndex(0);
+    setHighlightedNodes({});
+    setHighlightedEdges({});
+    setExecutionLog([]);
+  };
 
   const loadPreset = (key) => {
     const preset = presets[key];
@@ -81,13 +84,9 @@ export default function App() {
     showToast(`Loaded map preset: ${preset.name}`);
   };
 
-  const resetPlayback = () => {
-    setIsPlaying(false);
-    setCurrentStepIndex(0);
-    setHighlightedNodes({});
-    setHighlightedEdges({});
-    setExecutionLog([]);
-  };
+  useEffect(() => {
+    loadPreset(initialPresetKey);
+  }, []);
 
   useEffect(() => {
     if (nodes.length === 0) {
@@ -322,52 +321,176 @@ export default function App() {
     if (currentStepIndex > 0) setCurrentStepIndex(currentStepIndex - 1);
   };
 
+  // Warning calculations
+  const hasHub = hubNodeId !== null;
+  const hasTarget = targetNodeId !== null;
+  let warningMsg = null;
+  if (selectedAlgo === 'dijkstra' && (!hasHub || !hasTarget)) {
+    warningMsg = !hasHub ? "Prerequisite: Set Hub Location" : "Prerequisite: Set Destination Node";
+  } else if (selectedAlgo === 'prim' && !hasHub) {
+    warningMsg = "Prerequisite: Set Hub Location";
+  } else if (selectedAlgo === 'tsp' && !hasHub) {
+    warningMsg = "Prerequisite: Set Hub Location";
+  }
+
   return (
-    <div className="h-screen w-screen overflow-hidden bg-black text-slate-100 flex antialiased">
-      {/* 1. LEFT SIDEBAR (Fixed Width: 380px) */}
-      <div className="w-[380px] h-full flex flex-col bg-[#0a0a0a]/90 backdrop-blur-lg border-r border-neutral-900 shadow-2xl z-20 shrink-0">
-        <header className="p-5 border-b border-neutral-900/60 flex items-center gap-3 shrink-0">
-          <div className="bg-rose-500/10 border border-rose-500/25 p-2.5 rounded-xl shadow-lg shadow-rose-950/20 flex items-center justify-center text-rose-400">
-            <Navigation className="h-6 w-6 rotate-45" />
+    <div className="h-screen w-screen overflow-hidden bg-black text-slate-100 flex flex-col antialiased">
+      {/* 1. TOP HEADER BAR */}
+      <header className="h-16 w-full border-b border-neutral-900 bg-[#050505]/95 backdrop-blur-md px-5 flex items-center justify-between shrink-0 z-30 select-none">
+        {/* Left Section: Logo */}
+        <div className="flex items-center gap-3">
+          <div className="bg-rose-500/10 border border-rose-500/25 p-2 rounded-xl text-rose-400">
+            <Navigation className="h-5 w-5 rotate-45" />
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-base font-black tracking-tight text-white leading-tight">
               LogiRoute
             </h1>
-            <p className="text-[0.75rem] font-semibold text-neutral-400 mt-0.5 tracking-wide leading-tight">
-              Interactive route optimization and graph algorithm visualizer.
+            <p className="text-[0.65rem] font-semibold text-neutral-500 tracking-wide mt-0.5">
+              Route Optimizer Sandbox
             </p>
           </div>
-        </header>
+        </div>
 
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 custom-scrollbar transition-all duration-300" style={{ paddingBottom: isConsoleOpen ? 300 : 80 }}>
-          <PresetSelector
-            activePresetKey={activePresetKey}
-            onSelectPreset={loadPreset}
-          />
-          
-          <AlgorithmSelector
-            selectedAlgo={selectedAlgo}
-            setSelectedAlgo={setSelectedAlgo}
-            isPlaying={isPlaying}
-            setIsPlaying={setIsPlaying}
-            playbackSpeed={playbackSpeed}
-            setPlaybackSpeed={setPlaybackSpeed}
-            currentStepIndex={currentStepIndex}
-            totalSteps={algoSteps.length}
-            stepDescription={algoSteps[currentStepIndex]?.description || ''}
-            onStepForward={handleStepForward}
-            onStepBackward={handleStepBackward}
-            onReset={resetPlayback}
-            hubNodeId={hubNodeId}
-            targetNodeId={targetNodeId}
-            nodes={nodes}
-          />
+        {/* Center Section: Dropdowns & Warnings */}
+        <div className="flex items-center gap-5">
+          {/* Preset Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-[0.65rem] font-black text-neutral-500 uppercase tracking-wider">Map Grid:</span>
+            <select
+              value={activePresetKey}
+              onChange={(e) => loadPreset(e.target.value)}
+              className="bg-[#0f0f0f] border border-neutral-800 text-slate-200 text-xs font-bold rounded-xl px-3 py-1.5 focus:outline-none focus:border-rose-500 cursor-pointer transition-all hover:bg-neutral-900"
+            >
+              {Object.entries(presets).map(([key, preset]) => (
+                <option key={key} value={key}>
+                  {preset.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <SidebarControls
+          {/* Solver Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-[0.65rem] font-black text-neutral-500 uppercase tracking-wider">Solver:</span>
+            <select
+              value={selectedAlgo}
+              onChange={(e) => { resetPlayback(); setSelectedAlgo(e.target.value); }}
+              className="bg-[#0f0f0f] border border-neutral-800 text-slate-200 text-xs font-bold rounded-xl px-3 py-1.5 focus:outline-none focus:border-rose-500 cursor-pointer transition-all hover:bg-neutral-900"
+            >
+              <option value="dijkstra">Dijkstra Shortest Path</option>
+              <option value="prim">Prim's Minimum Spanning Tree</option>
+              <option value="tsp">Traveling Salesman Problem</option>
+            </select>
+          </div>
+
+          {/* Warning Badge */}
+          {warningMsg && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[0.65rem] font-black animate-pulse">
+              <AlertTriangle className="h-3 w-3 text-amber-400" />
+              <span>{warningMsg}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Right Section: Media Controls & Toggles */}
+        <div className="flex items-center gap-4">
+          {/* Stepper controls */}
+          <div className="flex items-center gap-1 bg-neutral-950 border border-neutral-900 px-2 py-1 rounded-xl">
+            {/* Step Backward */}
+            <button
+              onClick={handleStepBackward}
+              disabled={isPlaying || currentStepIndex <= 0 || algoSteps.length === 0}
+              className="p-1.5 rounded-lg hover:bg-neutral-900 text-neutral-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Step Backward"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            {/* Play/Pause */}
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              disabled={
+                (selectedAlgo === 'dijkstra' && (hubNodeId === null || targetNodeId === null)) ||
+                (selectedAlgo === 'prim' && hubNodeId === null) ||
+                (selectedAlgo === 'tsp' && hubNodeId === null) ||
+                algoSteps.length === 0
+              }
+              className={`px-3 py-1.5 rounded-lg text-[0.7rem] font-extrabold flex items-center gap-1 border transition-all ${
+                isPlaying
+                  ? 'bg-red-950/40 border-red-500/30 text-red-400 hover:bg-red-950/60 shadow-lg shadow-red-950/20'
+                  : selectedAlgo === 'dijkstra'
+                  ? 'bg-cyan-600 border-cyan-500 text-white hover:bg-cyan-500'
+                  : selectedAlgo === 'prim'
+                  ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-500'
+                  : 'bg-amber-600 border-amber-600 text-white hover:bg-amber-500'
+              } disabled:opacity-30 disabled:cursor-not-allowed`}
+            >
+              {isPlaying ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Play className="h-3.5 w-3.5 fill-current" />}
+              {isPlaying ? 'Pause' : 'Solve'}
+            </button>
+
+            {/* Step Forward */}
+            <button
+              onClick={handleStepForward}
+              disabled={isPlaying || currentStepIndex >= algoSteps.length - 1 || algoSteps.length === 0}
+              className="p-1.5 rounded-lg hover:bg-neutral-900 text-neutral-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Step Forward"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+
+            <div className="h-4 w-[1px] bg-neutral-900 mx-1" />
+
+            {/* Reset */}
+            <button
+              onClick={resetPlayback}
+              disabled={algoSteps.length === 0}
+              className="p-1.5 rounded-lg hover:bg-neutral-900 text-neutral-400 hover:text-rose-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Reset Visualizer"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Speed Slider */}
+          <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-900 px-3 py-1.5 rounded-xl text-[0.65rem] font-bold text-neutral-500">
+            <span>Speed:</span>
+            <input
+              type="range"
+              min="200"
+              max="2000"
+              step="200"
+              value={playbackSpeed}
+              onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+              className="w-16 h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+            />
+            <span className="font-mono text-neutral-400 w-8 text-right">{playbackSpeed}ms</span>
+          </div>
+
+          {/* Analytics Sidebar Toggle */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={`p-2 rounded-xl border transition-colors ${
+              isSidebarOpen 
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
+                : 'bg-neutral-950 border-neutral-900 text-neutral-400 hover:text-white'
+            }`}
+            title={isSidebarOpen ? "Hide Analytics Panel" : "Show Analytics Panel"}
+          >
+            <BarChart3 className="h-4 w-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* 2. BODY CONTAINER */}
+      <div className="flex-1 w-full flex overflow-hidden relative">
+        {/* CENTER FULLSCREEN CANVAS (Flex-1) */}
+        <main className="flex-1 h-full relative bg-black flex flex-col overflow-hidden">
+          <GraphCanvas
             nodes={nodes}
-            setNodes={setNodes}
             edges={edges}
+            setNodes={setNodes}
             setEdges={setEdges}
             canvasMode={canvasMode}
             setCanvasMode={setCanvasMode}
@@ -377,43 +500,42 @@ export default function App() {
             setHubNodeId={setHubNodeId}
             targetNodeId={targetNodeId}
             setTargetNodeId={setTargetNodeId}
-            onActionToast={showToast}
+            highlightedNodes={highlightedNodes}
+            highlightedEdges={highlightedEdges}
+            onAddNodeToast={showToast}
+            selectedAlgo={selectedAlgo}
           />
+
+          {/* Stepper Description Overlay Banner on Canvas */}
+          {algoSteps.length > 0 && (
+            <div className={`absolute left-1/2 -translate-x-1/2 z-10 w-[90%] max-w-[520px] bg-[#050505]/90 backdrop-blur-md border border-neutral-900/60 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 ${
+              isConsoleOpen ? 'bottom-[300px]' : 'bottom-16'
+            }`}>
+              <div className={`h-2 w-2 rounded-full shrink-0 animate-pulse ${
+                selectedAlgo === 'dijkstra' ? 'bg-cyan-400' : selectedAlgo === 'prim' ? 'bg-emerald-400' : 'bg-amber-400'
+              }`} />
+              <span className="text-xs text-neutral-300 font-bold leading-relaxed">
+                {algoSteps[currentStepIndex]?.description || "Press Solve to begin simulation."}
+              </span>
+            </div>
+          )}
+        </main>
+
+        {/* RIGHT SIDEBAR (Collapsible, Width: 360px) */}
+        <div className={`h-full bg-[#0a0a0a]/90 backdrop-blur-lg border-l border-neutral-900 shadow-2xl overflow-y-auto p-5 z-20 shrink-0 custom-scrollbar transition-all duration-300 ${
+          isSidebarOpen ? 'w-[360px] opacity-100' : 'w-0 opacity-0 pointer-events-none p-0 border-l-0'
+        }`} style={{ paddingBottom: isConsoleOpen ? 300 : 80 }}>
+          {isSidebarOpen && (
+            <AnalyticsPanel
+              selectedAlgo={selectedAlgo}
+              dijkstraResult={dijkstraResult}
+              primResult={primResult}
+              tspResult={tspResult}
+              nodes={nodes}
+              isAlgoFinished={algoSteps.length > 0 && currentStepIndex === algoSteps.length - 1}
+            />
+          )}
         </div>
-      </div>
-
-      {/* 2. CENTER CANVAS (Flex-1) */}
-      <main className="flex-1 h-full relative bg-black flex flex-col overflow-hidden">
-        <GraphCanvas
-          nodes={nodes}
-          edges={edges}
-          setNodes={setNodes}
-          setEdges={setEdges}
-          canvasMode={canvasMode}
-          selectedNodeId={selectedNodeId}
-          setSelectedNodeId={setSelectedNodeId}
-          hubNodeId={hubNodeId}
-          setHubNodeId={setHubNodeId}
-          targetNodeId={targetNodeId}
-          setTargetNodeId={setTargetNodeId}
-          highlightedNodes={highlightedNodes}
-          highlightedEdges={highlightedEdges}
-          onAddNodeToast={showToast}
-          selectedAlgo={selectedAlgo} // Pass this down to use semantic colors inside canvas
-        />
-      </main>
-
-      {/* 3. RIGHT SIDEBAR (Fixed Width: 350px) */}
-      <div className="w-[360px] h-full bg-[#0a0a0a]/90 backdrop-blur-lg border-l border-neutral-900 shadow-2xl overflow-y-auto p-5 z-20 shrink-0 custom-scrollbar transition-all duration-300" style={{ paddingBottom: isConsoleOpen ? 300 : 80 }}>
-        <AnalyticsPanel
-          nodeCount={nodes.length}
-          selectedAlgo={selectedAlgo}
-          dijkstraResult={dijkstraResult}
-          primResult={primResult}
-          tspResult={tspResult}
-          nodes={nodes}
-          isAlgoFinished={algoSteps.length > 0 && currentStepIndex === algoSteps.length - 1}
-        />
       </div>
 
       {/* 4. Fixed Bottom Console Drawer */}
@@ -482,7 +604,7 @@ export default function App() {
       </div>
 
       {/* 5. Toast Notifications Overlay */}
-      <div className={`fixed left-[400px] flex flex-col gap-2 z-50 pointer-events-none transition-all duration-300 ${isConsoleOpen ? 'bottom-[300px]' : 'bottom-16'}`}>
+      <div className={`fixed left-[20px] flex flex-col gap-2 z-50 pointer-events-none transition-all duration-300 ${isConsoleOpen ? 'bottom-[300px]' : 'bottom-16'}`}>
         {toasts.map(t => (
           <div
             key={t.id}

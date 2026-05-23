@@ -1,26 +1,19 @@
 # LogiRoute: Dynamic Delivery Route Optimizer
 
-LogiRoute is a premium, interactive web application that models, solves, and animates complex network routing and logistics problems in real time. Built with **React, Vite, and TailwindCSS**, it serves as an educational sandbox and benchmarking platform for graph theory algorithms applied to courier delivery networks.
+LogiRoute is a premium, interactive web application designed to model, solve, and animate complex network routing and logistics problems in real time. Built with **React, Vite, TailwindCSS, and Lucide Icons**, it serves as an educational sandbox and visual benchmarking platform for graph theory algorithms applied to delivery courier networks.
 
 ---
 
-## 🚀 Key Features
+## 🌟 The UX Redesign Philosophy
 
-* **Interactive CAD-Style Canvas:**
-  * Click to place delivery locations (customer pins) and hubs.
-  * Drag and drop pins to dynamically rearrange network topologies with real-time road weight re-calculations.
-  * Connect locations using a smooth, rubber-band connecting line in connection mode.
-  * Inspect locations and manually adjust road weights (in kilometers) or assign hub/destination roles.
-* **Collapsible Algorithmic Stepper Drawer:**
-  * A retro-terminal styled console drawer that provides detailed, step-by-step logs of algorithm executions.
-  * Play, pause, step forward, step backward, or reset the visualizer with adjustable playback speeds (from $200\text{ms}$ to $2000\text{ms}$).
-  * Highlights active edges, visited nodes, and optimal paths on the canvas in motion.
-* **Performance Analytics Dashboard:**
-  * Compare execution speeds of brute-force vs. dynamic programming solvers side-by-side.
-  * Real-time metrics tracking total route distance, computational complexities, and network link counts.
-  * Draws a separate mini-map displaying the completed Minimum Spanning Tree (MST) sub-graph.
-* **Pre-Built Network Maps:**
-  * Load pre-configured maps with single-click presets: *5-Node Hub & Spoke*, *8-Node Suburb Grid*, and *12-Node Regional State Network*.
+In our latest major release, we transitioned LogiRoute from a rigid, complex 3-column workspace to a **distraction-free, fullscreen canvas layout** with floating glassmorphic panels. This dramatically simplifies the User Experience (UX), making network building and route visualization highly intuitive.
+
+### 🎨 The New Layout Architecture
+* **Top Control Bar:** A unified, glassmorphic header containing preset selectors, algorithm options, stepper playback controls (Play, Pause, Step Forward/Backward, Speed slider), and active alerts.
+* **Left Floating Tool Tray:** A sleek, vertical overlay containing drawing modes (Move/Select, Add Location, Connect Roads, Quick Erase).
+* **Sliding Inspector Panel:** Select any customer location to slide out a context inspector, allowing you to edit labels, check precise coordinates, assign a starting **Hub** or **Destination**, or delete nodes.
+* **Collapsible Analytics Sidebar:** Toggled via a floating button in the Top Control Bar, this sidebar reveals computational metrics, execution times, O-notation complexities, and a live rendering of the Minimum Spanning Tree (MST) sub-graph.
+* **Terminal Stepper Drawer:** A retro-styled terminal drawer at the bottom showing step-by-step logs of algorithm executions, perfect for debugging or educational walks.
 
 ---
 
@@ -34,7 +27,7 @@ LogiRoute implements three core routing algorithms inside [`src/utils/algorithms
 * **Visualization:** Highlights checked connections and traces the finalized shortest path in glowing cyan.
 
 ### 2. Prim's Minimum Spanning Tree (MST)
-* **Logistics Use Case:** Designing infrastructure or grid layouts. Finds the cheapest way to construct roads connecting all locations together without loops.
+* **Logistics Use Case:** Designing infrastructure or delivery network layouts. Finds the cheapest way to construct roads connecting all locations together without loops.
 * **Complexity:** Greedy growth ($O(E \log V)$).
 * **Visualization:** Highlights boundary scans and renders the final spanning tree in glowing emerald.
 
@@ -49,31 +42,22 @@ LogiRoute implements three core routing algorithms inside [`src/utils/algorithms
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## 🛠️ Folder & Code Structure
 
-* **Framework:** React 19 (Vite)
-* **Styling:** TailwindCSS 3, Lucide Icons, and Vanilla CSS keyframes (pulsing glows, dashed flow animations)
-* **Canvas Rendering:** Vector SVG viewports with reactive coordinate listeners
-* **Performance:** Inline JavaScript computational engines (no external servers needed for calculations)
+The repository is structured to maintain modularity and ease of extension:
 
 ```
 Smart-Route-Optimizer/
 ├── public/                 # Static assets
 ├── src/
 │   ├── components/
-│   │   ├── AlgorithmSelector.jsx  # Stepper play controls & speed configs
 │   │   ├── AnalyticsPanel.jsx     # Side-by-side solver metrics & MST sub-graph
-│   │   ├── GraphCanvas.jsx        # SVG canvas with drag-and-drop & link drawing
-│   │   ├── PresetSelector.jsx     # Dropdown preset maps loader
-│   │   └── SidebarControls.jsx    # Inspector tools & custom coordinate inputs
-│   ├── pages/
-│   │   ├── LandingPage.jsx        # Welcome landing view
-│   │   └── Workspace.jsx          # Workbench orchestrator
+│   │   └── GraphCanvas.jsx        # SVG canvas with Left Tool Tray, Node Inspector, and clear button
 │   ├── utils/
 │   │   ├── algorithms.js          # Core Dijkstra, Prim, and TSP solvers
 │   │   └── presets.js             # Initial coordinate setups (automatically scaled)
-│   ├── App.jsx                    # Root App component (state machine)
-│   ├── index.css                  # Tailwind styles and custom cyber glows
+│   ├── App.jsx                    # Root App component, layout, Top Control Bar, Stepper play controls
+│   ├── index.css                  # Custom cyber glows, theme scrollbars, animations
 │   └── main.jsx                   # React mounting entrypoint
 ├── index.html              # HTML shell
 ├── package.json            # npm dependencies
@@ -104,11 +88,17 @@ Make sure you have Node.js (version 18 or above) installed on your machine.
    Open the displayed local link (usually `http://localhost:5173`) in your browser.
 
 ### Build and Deployment
-To compile the production-ready bundle:
+To compile the production-ready bundle and verify that there are no compilation errors:
 ```bash
 npm run build
 ```
 Preview the production build locally:
 ```bash
 npm run preview
+```
+
+### Code Formatting and Linting
+To check and enforce code standards, run the ESLint checker:
+```bash
+npm run lint
 ```
