@@ -160,7 +160,7 @@ export default function App() {
               isBetter: step.isBetter,
               evaluatedCount: step.evaluatedCount,
               description: `[Permutation Search] Checked path permutation #${step.evaluatedCount}: ${
-                step.tour.map(id => nodes.find(n => n.id === id)?.label).join(' ➔ ')
+                step.tour.map(id => nodes.find(n => n.id === id)?.label?.trim() || `Location ${id}`).join(' ➔ ')
               } (Cost: ${step.cost.toFixed(1)} km). ` +
                 (step.isBetter ? `★ Found shorter delivery tour!` : `Keep searching...`)
             }));

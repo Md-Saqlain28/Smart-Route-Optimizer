@@ -41,6 +41,8 @@ export function dijkstra(nodes, edges, startId, endId = null) {
   });
   distances[startId] = 0;
 
+  const startLabel = nodes.find(n => n.id === startId)?.label?.trim() || "Central Hub";
+
   // Add initial state
   steps.push({
     type: 'init',
@@ -49,7 +51,7 @@ export function dijkstra(nodes, edges, startId, endId = null) {
     distances: { ...distances },
     parents: { ...parents },
     highlightEdges: [],
-    description: `Initialize distances: Set start Hub node [${nodes.find(n => n.id === startId)?.label}] distance to 0, and all other customer nodes to Infinity.`
+    description: `Initialize distances: Set start Hub node [${startLabel}] distance to 0, and all other customer nodes to Infinity.`
   });
 
   const unvisitedNodes = new Set(nodes.map(n => n.id));
@@ -71,7 +73,7 @@ export function dijkstra(nodes, edges, startId, endId = null) {
       break;
     }
 
-    const currNodeLabel = nodes.find(n => n.id === currentNodeId)?.label;
+    const currNodeLabel = nodes.find(n => n.id === currentNodeId)?.label?.trim() || (currentNodeId === startId ? "Central Hub" : `Location ${currentNodeId}`);
 
     // Mark current node as visiting
     steps.push({
@@ -106,7 +108,7 @@ export function dijkstra(nodes, edges, startId, endId = null) {
     for (const neighbor of neighbors) {
       const neighborId = neighbor.node;
       const weight = neighbor.weight;
-      const neighborLabel = nodes.find(n => n.id === neighborId)?.label;
+      const neighborLabel = nodes.find(n => n.id === neighborId)?.label?.trim() || `Location ${neighborId}`;
 
       if (visited.has(neighborId)) continue;
 
@@ -171,7 +173,7 @@ export function dijkstra(nodes, edges, startId, endId = null) {
     path: path,
     description: endId !== null 
       ? (path.length > 0 
-          ? `Algorithm complete. Shortest path found: ${path.map(id => nodes.find(n => n.id === id)?.label).join(' ➔ ')} (Total: ${pathCost} km).`
+          ? `Algorithm complete. Shortest path found: ${path.map(id => nodes.find(n => n.id === id)?.label?.trim() || (id === startId ? "Central Hub" : `Location ${id}`)).join(' ➔ ')} (Total: ${pathCost} km).`
           : `Algorithm complete. No path exists from start to target node.`)
       : `Algorithm complete. Shortest paths computed from Hub to all customers.`
   });
@@ -197,7 +199,7 @@ export function primMST(nodes, edges, startId = 0) {
   if (nodes.length === 0) return { mstEdges: [], steps: [] };
 
   visited.add(startId);
-  const startLabel = nodes.find(n => n.id === startId)?.label;
+  const startLabel = nodes.find(n => n.id === startId)?.label?.trim() || "Central Hub";
 
   steps.push({
     type: 'init',
@@ -236,8 +238,8 @@ export function primMST(nodes, edges, startId = 0) {
       return { mstEdges, steps, complete: false };
     }
 
-    const fromLabel = nodes.find(n => n.id === minEdge.from)?.label;
-    const toLabel = nodes.find(n => n.id === minEdge.to)?.label;
+    const fromLabel = nodes.find(n => n.id === minEdge.from)?.label?.trim() || `Location ${minEdge.from}`;
+    const toLabel = nodes.find(n => n.id === minEdge.to)?.label?.trim() || `Location ${minEdge.to}`;
 
     // Highlight the edge we are considering
     steps.push({

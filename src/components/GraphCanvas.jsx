@@ -27,6 +27,9 @@ export default function GraphCanvas({
   // Edge creation state
   const [linkingStartId, setLinkingStartId] = useState(null);
   
+  // Mouse position for rubber-band connect line preview
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
   // In-canvas modal for setting custom edge weight
   const [edgeModal, setEdgeModal] = useState({
     isOpen: false,
@@ -93,16 +96,25 @@ export default function GraphCanvas({
       e.stopPropagation();
       if (linkingStartId === null) {
         setLinkingStartId(nodeId);
+        const startNode = nodes.find(n => n.id === nodeId);
+        if (startNode) {
+          setMousePos({ x: startNode.x, y: startNode.y });
+        }
       } else if (linkingStartId !== nodeId) {
         const nodeA = nodes.find(n => n.id === linkingStartId);
         const nodeB = nodes.find(n => n.id === nodeId);
         const distance = getEuclideanDistance(nodeA, nodeB);
         
+        // Preserve existing weight if the edge already exists
+        const existingEdge = edges.find(e => 
+          (e.from === linkingStartId && e.to === nodeId) || (e.from === nodeId && e.to === linkingStartId)
+        );
+        
         setEdgeModal({
           isOpen: true,
           from: linkingStartId,
           to: nodeId,
-          weight: distance.toString()
+          weight: existingEdge ? existingEdge.weight.toString() : distance.toString()
         });
         setLinkingStartId(null);
       }
@@ -113,8 +125,12 @@ export default function GraphCanvas({
   };
 
   const handleSVGMouseMove = (e) => {
+    const coords = getSVGCoordinates(e);
+    if (canvasMode === 'connect' && linkingStartId !== null) {
+      setMousePos(coords);
+    }
     if (draggingNodeId !== null && canvasMode === 'select') {
-      const { x, y } = getSVGCoordinates(e);
+      const { x, y } = coords;
       const constrainedX = Math.max(15, Math.min(585, x));
       const constrainedY = Math.max(15, Math.min(385, y));
       
@@ -123,6 +139,21 @@ export default function GraphCanvas({
           ? { ...node, x: constrainedX, y: constrainedY }
           : node
       ));
+
+      // Recalculate edge weights on drag dynamically
+      setEdges(prevEdges => prevEdges.map(edge => {
+        if (edge.from === draggingNodeId || edge.to === draggingNodeId) {
+          const otherNodeId = edge.from === draggingNodeId ? edge.to : edge.from;
+          const otherNode = nodes.find(n => n.id === otherNodeId);
+          if (otherNode) {
+            const dx = constrainedX - otherNode.x;
+            const dy = constrainedY - otherNode.y;
+            const newWeight = Math.round(Math.sqrt(dx * dx + dy * dy) * 0.1 * 10) / 10;
+            return { ...edge, weight: newWeight };
+          }
+        }
+        return edge;
+      }));
     }
   };
 
@@ -333,7 +364,7 @@ export default function GraphCanvas({
           {canvasMode === 'connect' && linkingStartId !== null && (() => {
             const startNode = nodes.find(n => n.id === linkingStartId);
             if (!startNode) return null;
-            return <line x1={startNode.x} y1={startNode.y} x2={linkingStartId} stroke="#f43f5e" strokeWidth="2" strokeDasharray="4 4" className="opacity-60 animate-pulse" />;
+            return <line x1={startNode.x} y1={startNode.y} x2={mousePos.x} y2={mousePos.y} stroke="#f43f5e" strokeWidth="2" strokeDasharray="4 4" className="opacity-60 animate-pulse" />;
           })()}
 
           {nodes.map((node) => {
@@ -408,20 +439,27 @@ export default function GraphCanvas({
                 )}
 
                 <g transform={`translate(${node.labelOffsetX ?? 0}, ${node.labelOffsetY ?? 24})`}>
-                  <text
-                    textAnchor="middle" dominantBaseline="middle"
-                    stroke="#000000" strokeWidth="4" strokeLinejoin="round"
-                    className="text-[0.65rem] font-bold tracking-tight pointer-events-none" y="0"
-                  >
-                    {node.label}
-                  </text>
-                  <text
-                    textAnchor="middle" dominantBaseline="middle"
-                    fill={isHub ? "#fca5a5" : isTarget ? "#22d3ee" : "#a3a3a3"}
-                    className={`text-[0.65rem] font-bold tracking-tight pointer-events-none ${isSelected ? 'text-rose-400 font-extrabold' : ''}`} y="0"
-                  >
-                    {node.label}
-                  </text>
+                  {(() => {
+                    const displayLabel = node.label?.trim() || (isHub ? "Central Hub" : `Location ${node.id}`);
+                    return (
+                      <>
+                        <text
+                          textAnchor="middle" dominantBaseline="middle"
+                          stroke="#000000" strokeWidth="4" strokeLinejoin="round"
+                          className="text-[0.65rem] font-bold tracking-tight pointer-events-none" y="0"
+                        >
+                          {displayLabel}
+                        </text>
+                        <text
+                          textAnchor="middle" dominantBaseline="middle"
+                          fill={isHub ? "#fca5a5" : isTarget ? "#22d3ee" : "#a3a3a3"}
+                          className={`text-[0.65rem] font-bold tracking-tight pointer-events-none ${isSelected ? 'text-rose-400 font-extrabold' : ''}`} y="0"
+                        >
+                          {displayLabel}
+                        </text>
+                      </>
+                    );
+                  })()}
                 </g>
               </g>
             );
