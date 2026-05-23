@@ -125,33 +125,33 @@ export default function AlgorithmSelector({
 
       {/* 3. Prerequisite Warnings */}
       {selectedAlgo === 'dijkstra' && (!hasHub || !hasTarget) && (
-        <div className="bg-amber-950/30 border border-amber-500/30 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
+        <div className="bg-amber-950/20 border border-amber-500/20 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
           <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400" />
           <span>
-            {!hasHub && "Prerequisite Missing: Set a Location as Hub (using location context menu) first!"}
-            {hasHub && !hasTarget && "Prerequisite Missing: Set a Destination Node inside the canvas first!"}
+            {!hasHub && "🏠 Depot Hub Missing: Click any location circle on the map and select 'Set as Hub' to start."}
+            {hasHub && !hasTarget && "📍 Destination Missing: Click another customer pin on the map and select 'Set Destination'."}
           </span>
         </div>
       )}
 
       {selectedAlgo === 'prim' && !hasHub && (
-        <div className="bg-amber-950/30 border border-amber-500/30 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
+        <div className="bg-amber-950/20 border border-amber-500/20 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
           <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400" />
-          <span>Prerequisite Missing: Specify a Location as Hub first!</span>
+          <span>🏠 Depot Hub Missing: Click any location circle on the map and select 'Set as Hub' to establish the spanning network base.</span>
         </div>
       )}
 
       {selectedAlgo === 'tsp' && !hasHub && (
-        <div className="bg-amber-950/30 border border-amber-500/30 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
+        <div className="bg-amber-950/20 border border-amber-500/20 text-amber-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
           <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400" />
-          <span>Prerequisite Missing: Specify a Location as Hub first!</span>
+          <span>🏠 Depot Hub Missing: Click any location circle on the map and select 'Set as Hub' to serve as the start/end point for the delivery loop.</span>
         </div>
       )}
 
       {selectedAlgo === 'tsp' && nodes.length > 10 && (
-        <div className="bg-red-950/30 border border-red-500/30 text-red-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed">
+        <div className="bg-red-950/20 border border-red-500/30 text-red-300 p-3 rounded-xl flex gap-2 text-xs font-semibold leading-relaxed animate-pulse">
           <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-red-400" />
-          <span>Held-Karp TSP has exponential complexity. Running with &gt;10 locations will run slow in JavaScript.</span>
+          <span>⚠️ Warning: N = {nodes.length} (&gt;10 stops) is very large for Traveling Salesman. The algorithm will DP-solve dynamically, but live permutations will be bypassed.</span>
         </div>
       )}
 

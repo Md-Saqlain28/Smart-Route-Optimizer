@@ -89,8 +89,12 @@ export default function GraphCanvas({
       e.stopPropagation();
       setDraggingNodeId(nodeId);
       setSelectedNodeId(nodeId);
+    } else if (canvasMode === 'addNode') {
+      e.stopPropagation();
+      setSelectedNodeId(nodeId);
     } else if (canvasMode === 'connect') {
       e.stopPropagation();
+      setSelectedNodeId(nodeId); // Select node in connect mode to show details
       if (linkingStartId === null) {
         setLinkingStartId(nodeId);
       } else if (linkingStartId !== nodeId) {
@@ -349,6 +353,10 @@ export default function GraphCanvas({
             let filterUrl = "";
             let pulseClass = "";
 
+            // Dynamic onboarding visual guides
+            const showHubGuidePulse = hubNodeId === null;
+            const showTargetGuidePulse = selectedAlgo === 'dijkstra' && hubNodeId !== null && targetNodeId === null && !isHub;
+
             if (isHub) {
               nodeColorStart = "#f43f5e"; // glowing ruby rose
               nodeColorEnd = "#9f1239";
@@ -386,6 +394,22 @@ export default function GraphCanvas({
                     r="20" fill="none"
                     stroke={selectedAlgo === 'dijkstra' ? "#22d3ee" : selectedAlgo === 'prim' ? "#05ffc4" : "#fbbf24"}
                     strokeWidth="1.5" className="animate-ping opacity-60"
+                  />
+                )}
+                {showHubGuidePulse && (
+                  <circle
+                    r="19" fill="none"
+                    stroke="#f43f5e"
+                    strokeWidth="1.5" className="animate-pulse opacity-40"
+                    strokeDasharray="3 3"
+                  />
+                )}
+                {showTargetGuidePulse && (
+                  <circle
+                    r="19" fill="none"
+                    stroke="#06b6d4"
+                    strokeWidth="1.5" className="animate-pulse opacity-50"
+                    strokeDasharray="3 3"
                   />
                 )}
                 <circle r="15" fill="black" opacity="0.4" dy="2" filter="url(#shadow)" />
@@ -518,49 +542,54 @@ export default function GraphCanvas({
         )}
 
         {/* Floating Context Menu on selected node */}
-        {canvasMode === 'select' && selectedNodeId !== null && !edgeModal.isOpen && (() => {
+        {canvasMode !== 'delete' && selectedNodeId !== null && !edgeModal.isOpen && (() => {
           const pos = getNodeScreenPos(selectedNodeId);
           if (!pos) return null;
           const isHub = selectedNodeId === hubNodeId;
           const isTarget = selectedNodeId === targetNodeId;
+          const node = nodes.find(n => n.id === selectedNodeId);
           return (
             <div
-              className="absolute z-40 flex flex-col gap-1 bg-[#0a0a0a]/95 backdrop-blur-md rounded-xl shadow-2xl border border-neutral-900 p-1.5 animate-in fade-in zoom-in-95 duration-150"
-              style={{ left: pos.x + 20, top: pos.y - 10, minWidth: 140 }}
+              className="absolute z-40 flex flex-col gap-1.5 bg-black/95 backdrop-blur-md rounded-xl shadow-2xl border border-neutral-800 p-2 animate-in fade-in zoom-in-95 duration-150"
+              style={{ left: pos.x + 20, top: pos.y - 10, minWidth: 170 }}
             >
+              <div className="px-2 py-0.5 text-[0.65rem] font-black text-neutral-500 uppercase tracking-wider">
+                {node?.label || 'Location'} Roles
+              </div>
+              <div className="border-t border-neutral-900/60 my-0.5" />
               <button
                 onClick={() => handleSetHub(selectedNodeId)}
                 disabled={isHub}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   isHub
                     ? 'text-rose-400 bg-rose-950/40 cursor-default'
                     : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
-                <Home className="h-3.5 w-3.5" />
-                {isHub ? 'Current Hub' : 'Set as Hub'}
+                <Home className="h-3.5 w-3.5 shrink-0" />
+                {isHub ? 'Current Hub' : 'Set as Start Hub'}
               </button>
               <button
                 onClick={() => handleSetTarget(selectedNodeId)}
                 disabled={isHub || isTarget}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   isTarget
                     ? 'text-cyan-400 bg-cyan-950/40 cursor-default'
                     : isHub
-                    ? 'text-neutral-600 cursor-not-allowed'
+                    ? 'text-neutral-600 cursor-not-allowed opacity-40'
                     : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
-                <MapPin className="h-3.5 w-3.5" />
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
                 {isTarget ? 'Is Destination' : 'Set Destination'}
               </button>
-              <div className="border-t border-neutral-900 my-0.5" />
+              <div className="border-t border-neutral-900/60 my-0.5" />
               <button
                 onClick={() => handleDeleteSelected(selectedNodeId)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-all"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-all w-full text-left"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                Delete
+                <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                Delete Node
               </button>
             </div>
           );

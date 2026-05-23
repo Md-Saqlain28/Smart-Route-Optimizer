@@ -89,6 +89,39 @@ export default function App() {
     setExecutionLog([]);
   };
 
+  const triggerAutoDemo = () => {
+    const preset = presets['downtown_5'];
+    if (!preset) return;
+
+    const clonedNodes = JSON.parse(JSON.stringify(preset.nodes));
+    const clonedEdges = JSON.parse(JSON.stringify(preset.edges));
+
+    setNodes(clonedNodes);
+    setEdges(clonedEdges);
+
+    const hubNode = clonedNodes.find(n => n.isHub);
+    const chosenHubId = hubNode ? hubNode.id : clonedNodes[0]?.id || 0;
+    setHubNodeId(chosenHubId);
+    
+    const chosenTargetId = 4; // Node 4
+    setTargetNodeId(chosenTargetId);
+    setSelectedNodeId(chosenTargetId); // Highlight target in inspector
+
+    setSelectedAlgo('dijkstra');
+    setActivePresetKey('downtown_5');
+    
+    setIsPlaying(false);
+    setCurrentStepIndex(0);
+    setHighlightedNodes({});
+    setHighlightedEdges({});
+    setExecutionLog([]);
+
+    setTimeout(() => {
+      setIsPlaying(true);
+      showToast("🚀 Starting Auto-Solve Demo: Dijkstra Route Finder!");
+    }, 150);
+  };
+
   useEffect(() => {
     if (nodes.length === 0) {
       setAlgoSteps([]);
@@ -300,6 +333,36 @@ export default function App() {
     if (currentStepIndex > 0) setCurrentStepIndex(currentStepIndex - 1);
   };
 
+  // --- Wizard Onboarding Logic ---
+  const step1_hasNodes = nodes.length > 0;
+  const step2_hasHub = hubNodeId !== null;
+  const step3_hasTargetOrNotRequired = selectedAlgo !== 'dijkstra' || targetNodeId !== null;
+  const step4_isReady = step1_hasNodes && step2_hasHub && step3_hasTargetOrNotRequired;
+  
+  let wizardStep = 1;
+  let wizardTitle = "Step 1: Choose a Map Network";
+  let wizardDesc = "Choose a preset map from the left panel, or click 'Add Location' to draw custom delivery locations on the canvas.";
+  
+  if (!step1_hasNodes) {
+    wizardStep = 1;
+    wizardTitle = "Step 1: Create Your Map Network";
+    wizardDesc = "Select a preset map from the left sidebar, or click 'Add Location' to place delivery stops on the grid canvas.";
+  } else if (!step2_hasHub) {
+    wizardStep = 2;
+    wizardTitle = "Step 2: Assign Starting Depot (Hub)";
+    wizardDesc = "Click any location circle (pin) on the map and choose 'Set Start Hub' to define the start Depot.";
+  } else if (!step3_hasTargetOrNotRequired) {
+    wizardStep = 3;
+    wizardTitle = "Step 3: Define Customer Destination";
+    wizardDesc = "Dijkstra requires a target point. Click any other location circle on the map canvas and select 'Set Destination'.";
+  } else if (step4_isReady) {
+    wizardStep = 4;
+    wizardTitle = isPlaying ? "Simulation Running!" : "Step 4: Solve & Visualize!";
+    wizardDesc = isPlaying 
+      ? "Observing algorithm routes! Check step console at the bottom for detailed calculations."
+      : "Topology verified! Click the glowing 'Solve Optimally' button in the solver card to see the shortest path.";
+  }
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-black text-slate-100 flex antialiased">
       {/* 1. LEFT SIDEBAR (Fixed Width: 380px) */}
@@ -362,23 +425,56 @@ export default function App() {
 
       {/* 2. CENTER CANVAS (Flex-1) */}
       <main className="flex-1 h-full relative bg-black flex flex-col overflow-hidden">
-        <GraphCanvas
-          nodes={nodes}
-          edges={edges}
-          setNodes={setNodes}
-          setEdges={setEdges}
-          canvasMode={canvasMode}
-          selectedNodeId={selectedNodeId}
-          setSelectedNodeId={setSelectedNodeId}
-          hubNodeId={hubNodeId}
-          setHubNodeId={setHubNodeId}
-          targetNodeId={targetNodeId}
-          setTargetNodeId={setTargetNodeId}
-          highlightedNodes={highlightedNodes}
-          highlightedEdges={highlightedEdges}
-          onAddNodeToast={showToast}
-          selectedAlgo={selectedAlgo} // Pass this down to use semantic colors inside canvas
-        />
+        {/* Dynamic Guided Wizard Panel */}
+        <div className="p-4 border-b border-neutral-900 bg-[#070707]/90 backdrop-blur-md z-10 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 shadow-lg">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="h-9 w-9 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400 shrink-0 shadow-md">
+              <span className="text-xs font-black">{wizardStep}</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-white flex items-center gap-2 tracking-wide">
+                {wizardTitle}
+                {step4_isReady && !isPlaying && (
+                  <span className="text-[0.6rem] font-bold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                    Ready
+                  </span>
+                )}
+              </h4>
+              <p className="text-[0.68rem] text-neutral-400 font-semibold leading-relaxed mt-0.5 max-w-xl">
+                {wizardDesc}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto justify-end">
+            <button
+              onClick={triggerAutoDemo}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-md shadow-rose-950/20 border border-rose-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              🚀 Auto-Solve Demo
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 w-full relative min-h-0">
+          <GraphCanvas
+            nodes={nodes}
+            edges={edges}
+            setNodes={setNodes}
+            setEdges={setEdges}
+            canvasMode={canvasMode}
+            selectedNodeId={selectedNodeId}
+            setSelectedNodeId={setSelectedNodeId}
+            hubNodeId={hubNodeId}
+            setHubNodeId={setHubNodeId}
+            targetNodeId={targetNodeId}
+            setTargetNodeId={setTargetNodeId}
+            highlightedNodes={highlightedNodes}
+            highlightedEdges={highlightedEdges}
+            onAddNodeToast={showToast}
+            selectedAlgo={selectedAlgo} // Pass this down to use semantic colors inside canvas
+          />
+        </div>
       </main>
 
       {/* 3. RIGHT SIDEBAR (Fixed Width: 350px) */}
