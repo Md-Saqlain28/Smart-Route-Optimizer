@@ -111,14 +111,18 @@ export default function AnalyticsPanel({
                 <div className="flex flex-col">
                   <span className="text-[0.7rem] font-bold text-slate-400">Total Distance</span>
                   <span className="text-sm font-black text-amber-300">
-                    {tspResult.dp?.cost ? `${tspResult.dp.cost} km` : 'N/A'}
+                    {tspResult.dp?.bypassed 
+                      ? 'Bypassed' 
+                      : (tspResult.dp?.cost ? `${tspResult.dp.cost} km` : 'N/A')}
                   </span>
                 </div>
 
                 <div className="flex flex-col">
                   <span className="text-[0.7rem] font-bold text-slate-400">Execution Time</span>
                   <span className="text-sm font-black text-emerald-400">
-                    {tspResult.dp?.duration !== undefined ? `${tspResult.dp.duration} ms` : 'N/A'}
+                    {tspResult.dp?.bypassed 
+                      ? 'Bypassed' 
+                      : (tspResult.dp?.duration !== undefined ? `${tspResult.dp.duration} ms` : 'N/A')}
                   </span>
                 </div>
 
@@ -129,10 +133,17 @@ export default function AnalyticsPanel({
                   </span>
                 </div>
 
-                <div className="text-[0.65rem] text-emerald-400 font-bold border-t border-amber-900/20 pt-1.5 mt-1 flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                  Solved via Memoization
-                </div>
+                {tspResult.dp?.bypassed ? (
+                  <div className="text-[0.65rem] text-red-400 font-bold border-t border-amber-900/20 pt-1.5 mt-1 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse"></span>
+                    Exceeds 20-Node Limit
+                  </div>
+                ) : (
+                  <div className="text-[0.65rem] text-emerald-400 font-bold border-t border-amber-900/20 pt-1.5 mt-1 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                    Solved via Memoization
+                  </div>
+                )}
               </div>
             </div>
 

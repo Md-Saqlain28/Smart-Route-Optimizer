@@ -19,8 +19,8 @@ export function buildAdjacencyList(nodes, edges) {
     const to = parseInt(e.to);
     const weight = parseFloat(e.weight);
     
-    adj[from].push({ node: to, weight });
-    adj[to].push({ node: from, weight }); // undirected graph
+    if (adj[from]) adj[from].push({ node: to, weight });
+    if (adj[to]) adj[to].push({ node: from, weight }); // undirected graph
   });
   return adj;
 }
@@ -112,9 +112,20 @@ export function dijkstra(nodes, edges, startId, endId = null) {
 
       const altDistance = distances[currentNodeId] + weight;
       const isRelaxed = altDistance < distances[neighborId];
+      const oldDistance = distances[neighborId];
 
       const edgeKey = [Math.min(currentNodeId, neighborId), Math.max(currentNodeId, neighborId)].join('-');
       
+      const desc = `Checking connection to [${neighborLabel}] (distance: ${weight} km). Path cost via [${currNodeLabel}] would be ${distances[currentNodeId]} + ${weight} = ${altDistance} km. ` +
+        (isRelaxed 
+          ? `New path is shorter! Updating [${neighborLabel}]'s distance from ${oldDistance === Infinity ? 'Infinity' : oldDistance + ' km'} to ${altDistance} km.`
+          : `Existing distance (${oldDistance} km) is shorter. No update needed.`);
+
+      if (isRelaxed) {
+        distances[neighborId] = altDistance;
+        parents[neighborId] = currentNodeId;
+      }
+
       steps.push({
         type: 'relax_edge',
         currentNode: currentNodeId,
@@ -123,16 +134,8 @@ export function dijkstra(nodes, edges, startId, endId = null) {
         distances: { ...distances },
         parents: { ...parents },
         highlightEdges: [{ from: currentNodeId, to: neighborId, key: edgeKey }],
-        description: `Checking connection to [${neighborLabel}] (distance: ${weight} km). Path cost via [${currNodeLabel}] would be ${distances[currentNodeId]} + ${weight} = ${altDistance} km. ` +
-          (isRelaxed 
-            ? `New path is shorter! Updating [${neighborLabel}]'s distance from ${distances[neighborId] === Infinity ? 'Infinity' : distances[neighborId] + ' km'} to ${altDistance} km.`
-            : `Existing distance (${distances[neighborId]} km) is shorter. No update needed.`)
+        description: desc
       });
-
-      if (isRelaxed) {
-        distances[neighborId] = altDistance;
-        parents[neighborId] = currentNodeId;
-      }
     }
 
     steps.push({
@@ -344,6 +347,18 @@ export function solveTSPBruteForce(nodes, edges, startId = 0, onStepCallback = n
   const { dist, getPath } = computeDistanceMatrix(nodes, edges);
   
   const n = nodes.length;
+  if (n <= 1) {
+    const duration = performance.now() - startTime;
+    return {
+      tour: [startId],
+      expandedTour: [startId],
+      cost: 0,
+      steps: [],
+      duration: parseFloat(duration.toFixed(3)),
+      permutationsChecked: 1
+    };
+  }
+
   const unvisitedIndices = [];
   for (let i = 0; i < n; i++) {
     if (i !== startIndex) unvisitedIndices.push(i);

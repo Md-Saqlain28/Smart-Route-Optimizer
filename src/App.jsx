@@ -123,54 +123,76 @@ export default function App() {
     } else if (selectedAlgo === 'tsp') {
       if (hubNodeId !== null) {
         const n = nodes.length;
-        const dpRes = solveTSPDynamicProgramming(nodes, edges, hubNodeId);
-        
-        let bruteRes = null;
-        if (n <= 10) {
-          bruteRes = solveTSPBruteForce(nodes, edges, hubNodeId);
-        }
-
-        setTspResult({ brute: bruteRes, dp: dpRes });
-        setDijkstraResult(null);
-        setPrimResult(null);
-
-        if (n <= 6 && bruteRes && bruteRes.steps.length > 0) {
-          const tspSteps = bruteRes.steps.map((step) => ({
-            type: 'search',
-            tour: step.tour,
-            cost: step.cost,
-            bestCost: step.bestCost,
-            isBetter: step.isBetter,
-            evaluatedCount: step.evaluatedCount,
-            description: `[Permutation Search] Checked path permutation #${step.evaluatedCount}: ${
-              step.tour.map(id => nodes.find(n => n.id === id)?.label).join(' ➔ ')
-            } (Cost: ${step.cost.toFixed(1)} km). ` +
-              (step.isBetter ? `★ Found shorter delivery tour!` : `Keep searching...`)
-          }));
-
-          tspSteps.push({
-            type: 'done',
-            tour: dpRes.tour,
-            expandedTour: dpRes.expandedTour,
-            cost: dpRes.cost,
-            description: `Traveling Salesman Problem complete! Side-by-side solver confirms Held-Karp DP memoization found optimal path in ${dpRes.duration} ms vs Brute Force in ${bruteRes.duration} ms.`
+        if (n > 20) {
+          showToast("TSP bypassed: Network is too large (max 20 nodes).");
+          setTspResult({
+            brute: null,
+            dp: { tour: [], expandedTour: [], cost: null, duration: 0, bypassed: true }
           });
-          setAlgoSteps(tspSteps);
-        } else {
-          const tspSteps = [
+          setDijkstraResult(null);
+          setPrimResult(null);
+          setAlgoSteps([
             {
               type: 'computing',
-              description: `Initiated Traveling Salesman multi-stop loop. Bypassing live permutation steps because N = ${n} is too large (would evaluate ${(n-1).toLocaleString()}! permutations). Evaluating space-time Held-Karp DP...`
-            },
-            {
+              description: `Traveling Salesman Problem bypassed. The current network has ${n} nodes, which exceeds the safe threshold of 20 nodes for Held-Karp dynamic programming.`
+            }
+          ]);
+        } else {
+          const dpRes = solveTSPDynamicProgramming(nodes, edges, hubNodeId);
+          
+          let bruteRes = null;
+          if (n <= 10) {
+            bruteRes = solveTSPBruteForce(nodes, edges, hubNodeId);
+          }
+
+          setTspResult({ brute: bruteRes, dp: dpRes });
+          setDijkstraResult(null);
+          setPrimResult(null);
+
+          const isDisconnected = dpRes.cost === null;
+
+          if (n <= 6 && bruteRes && bruteRes.steps.length > 0) {
+            const tspSteps = bruteRes.steps.map((step) => ({
+              type: 'search',
+              tour: step.tour,
+              cost: step.cost,
+              bestCost: step.bestCost,
+              isBetter: step.isBetter,
+              evaluatedCount: step.evaluatedCount,
+              description: `[Permutation Search] Checked path permutation #${step.evaluatedCount}: ${
+                step.tour.map(id => nodes.find(n => n.id === id)?.label).join(' ➔ ')
+              } (Cost: ${step.cost.toFixed(1)} km). ` +
+                (step.isBetter ? `★ Found shorter delivery tour!` : `Keep searching...`)
+            }));
+
+            tspSteps.push({
               type: 'done',
               tour: dpRes.tour,
               expandedTour: dpRes.expandedTour,
               cost: dpRes.cost,
-              description: `TSP optimized successfully! Held-Karp solved route visiting all ${n} customers in just ${dpRes.duration} ms (O(n² 2ⁿ)). Brute force was bypassed or timed to prevent browser lock-up.`
-            }
-          ];
-          setAlgoSteps(tspSteps);
+              description: `Traveling Salesman Problem complete! Side-by-side solver confirms Held-Karp DP memoization found optimal path in ${dpRes.duration} ms vs Brute Force in ${bruteRes.duration} ms.`
+            });
+            setAlgoSteps(tspSteps);
+          } else {
+            const doneDescription = isDisconnected
+              ? `Traveling Salesman Problem complete: No valid circular route exists visiting all customers (the network is disconnected).`
+              : `TSP optimized successfully! Held-Karp solved route visiting all ${n} customers in just ${dpRes.duration} ms (O(n² 2ⁿ)). Brute force was bypassed or timed to prevent browser lock-up.`;
+
+            const tspSteps = [
+              {
+                type: 'computing',
+                description: `Initiated Traveling Salesman multi-stop loop. Bypassing live permutation steps because N = ${n} is too large (would evaluate ${(n-1).toLocaleString()}! permutations). Evaluating space-time Held-Karp DP...`
+              },
+              {
+                type: 'done',
+                tour: dpRes.tour,
+                expandedTour: dpRes.expandedTour,
+                cost: dpRes.cost,
+                description: doneDescription
+              }
+            ];
+            setAlgoSteps(tspSteps);
+          }
         }
       } else {
         setAlgoSteps([]);
