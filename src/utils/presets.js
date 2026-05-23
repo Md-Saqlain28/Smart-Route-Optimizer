@@ -93,3 +93,21 @@ export const presets = {
     ]
   }
 };
+
+// Helper to calculate Euclidean distance
+function getEuclideanDistance(nodeA, nodeB) {
+  const dx = nodeA.x - nodeB.x;
+  const dy = nodeA.y - nodeB.y;
+  return Math.round(Math.sqrt(dx * dx + dy * dy) * 0.1 * 10) / 10;
+}
+
+// Auto-calculate edge weights for presets to ensure geometric consistency
+Object.values(presets).forEach(preset => {
+  preset.edges.forEach(edge => {
+    const fromNode = preset.nodes.find(n => n.id === edge.from);
+    const toNode = preset.nodes.find(n => n.id === edge.to);
+    if (fromNode && toNode) {
+      edge.weight = getEuclideanDistance(fromNode, toNode);
+    }
+  });
+});

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Home, Trash2, Link, MapPin, Eye, Play, Pause } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Trash2, Link, MapPin, Move, PlusCircle } from 'lucide-react';
 import { getEuclideanDistance } from '../utils/algorithms';
 
 export default function GraphCanvas({
@@ -8,6 +8,7 @@ export default function GraphCanvas({
   setNodes,
   setEdges,
   canvasMode, // 'select', 'addNode', 'connect', 'delete'
+  setCanvasMode,
   selectedNodeId,
   setSelectedNodeId,
   hubNodeId,
@@ -27,6 +28,9 @@ export default function GraphCanvas({
   // Edge creation state
   const [linkingStartId, setLinkingStartId] = useState(null);
   
+  // Mouse position for rubber-band connect line preview
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
   // In-canvas modal for setting custom edge weight
   const [edgeModal, setEdgeModal] = useState({
     isOpen: false,
@@ -97,16 +101,25 @@ export default function GraphCanvas({
       setSelectedNodeId(nodeId); // Select node in connect mode to show details
       if (linkingStartId === null) {
         setLinkingStartId(nodeId);
+        const startNode = nodes.find(n => n.id === nodeId);
+        if (startNode) {
+          setMousePos({ x: startNode.x, y: startNode.y });
+        }
       } else if (linkingStartId !== nodeId) {
         const nodeA = nodes.find(n => n.id === linkingStartId);
         const nodeB = nodes.find(n => n.id === nodeId);
         const distance = getEuclideanDistance(nodeA, nodeB);
         
+        // Preserve existing weight if the edge already exists
+        const existingEdge = edges.find(e => 
+          (e.from === linkingStartId && e.to === nodeId) || (e.from === nodeId && e.to === linkingStartId)
+        );
+        
         setEdgeModal({
           isOpen: true,
           from: linkingStartId,
           to: nodeId,
-          weight: distance.toString()
+          weight: existingEdge ? existingEdge.weight.toString() : distance.toString()
         });
         setLinkingStartId(null);
       }
@@ -117,8 +130,12 @@ export default function GraphCanvas({
   };
 
   const handleSVGMouseMove = (e) => {
+    const coords = getSVGCoordinates(e);
+    if (canvasMode === 'connect' && linkingStartId !== null) {
+      setMousePos(coords);
+    }
     if (draggingNodeId !== null && canvasMode === 'select') {
-      const { x, y } = getSVGCoordinates(e);
+      const { x, y } = coords;
       const constrainedX = Math.max(15, Math.min(585, x));
       const constrainedY = Math.max(15, Math.min(385, y));
       
@@ -127,6 +144,21 @@ export default function GraphCanvas({
           ? { ...node, x: constrainedX, y: constrainedY }
           : node
       ));
+
+      // Recalculate edge weights on drag dynamically
+      setEdges(prevEdges => prevEdges.map(edge => {
+        if (edge.from === draggingNodeId || edge.to === draggingNodeId) {
+          const otherNodeId = edge.from === draggingNodeId ? edge.to : edge.from;
+          const otherNode = nodes.find(n => n.id === otherNodeId);
+          if (otherNode) {
+            const dx = constrainedX - otherNode.x;
+            const dy = constrainedY - otherNode.y;
+            const newWeight = Math.round(Math.sqrt(dx * dx + dy * dy) * 0.1 * 10) / 10;
+            return { ...edge, weight: newWeight };
+          }
+        }
+        return edge;
+      }));
     }
   };
 
@@ -188,25 +220,163 @@ export default function GraphCanvas({
     if (onAddNodeToast) onAddNodeToast(`[${nodes.find(n => n.id === nodeId)?.label}] is now the Destination.`);
   };
 
-  const handleDeleteSelected = (nodeId) => {
-    const label = nodes.find(n => n.id === nodeId)?.label;
-    deleteNode(nodeId);
-    if (onAddNodeToast) onAddNodeToast(`Deleted location [${label}].`);
-  };
-
-  // Compute pixel position for the floating context menu
-  const getNodeScreenPos = (nodeId) => {
-    if (!svgRef.current) return null;
-    const node = nodes.find(n => n.id === nodeId);
-    if (!node) return null;
-    const rect = svgRef.current.getBoundingClientRect();
-    const px = (node.x / 600) * rect.width;
-    const py = (node.y / 400) * rect.height;
-    return { x: px, y: py };
-  };
 
   return (
     <div className="relative w-full h-full bg-black border border-neutral-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+      {/* 1. Floating Canvas Tool Tray */}
+      <div className="absolute top-16 left-4 z-10 bg-[#050505]/95 backdrop-blur-md border border-neutral-900/60 p-1.5 rounded-2xl shadow-2xl flex flex-col gap-1.5 pointer-events-auto select-none">
+        <button
+          onClick={() => setCanvasMode('select')}
+          className={`p-2.5 rounded-xl transition-all ${
+            canvasMode === 'select'
+              ? 'bg-rose-600 text-white shadow-lg shadow-rose-950/40'
+              : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
+          }`}
+          title="Move / Select Location"
+        >
+          <Move className="h-4.5 w-4.5" />
+        </button>
+        <button
+          onClick={() => setCanvasMode('addNode')}
+          className={`p-2.5 rounded-xl transition-all ${
+            canvasMode === 'addNode'
+              ? 'bg-rose-600 text-white shadow-lg shadow-rose-950/40'
+              : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
+          }`}
+          title="Add Customer Pin"
+        >
+          <PlusCircle className="h-4.5 w-4.5" />
+        </button>
+        <button
+          onClick={() => setCanvasMode('connect')}
+          className={`p-2.5 rounded-xl transition-all ${
+            canvasMode === 'connect'
+              ? 'bg-rose-600 text-white shadow-lg shadow-rose-950/40'
+              : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
+          }`}
+          title="Connect Roads"
+        >
+          <Link className="h-4.5 w-4.5" />
+        </button>
+        <button
+          onClick={() => setCanvasMode('delete')}
+          className={`p-2.5 rounded-xl transition-all ${
+            canvasMode === 'delete'
+              ? 'bg-red-600 text-white shadow-lg shadow-red-950/40'
+              : 'text-neutral-400 hover:bg-red-950/20 hover:text-red-400'
+          }`}
+          title="Quick Erase Roads/Pins"
+        >
+          <Trash2 className="h-4.5 w-4.5" />
+        </button>
+      </div>
+
+      {/* 2. Floating Canvas Top-Right controls */}
+      <div className="absolute top-16 right-4 z-10 bg-[#050505]/95 backdrop-blur-md border border-neutral-900/60 p-1.5 rounded-2xl shadow-2xl flex items-center gap-2 pointer-events-auto">
+        <button
+          onClick={() => {
+            if (window.confirm("Are you sure you want to clear the entire canvas? This will delete all nodes and roads.")) {
+              setNodes([]);
+              setEdges([]);
+              setSelectedNodeId(null);
+              setHubNodeId(null);
+              setTargetNodeId(null);
+              if (onAddNodeToast) onAddNodeToast("Canvas cleared.");
+            }
+          }}
+          className="px-3 py-1.5 bg-neutral-950 border border-neutral-900 text-neutral-400 hover:text-red-400 hover:border-red-950/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+          title="Clear Entire Canvas"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Clear Grid
+        </button>
+      </div>
+
+      {/* 3. Sliding Node Inspector Panel */}
+      {selectedNodeId !== null && (() => {
+        const node = nodes.find(n => n.id === selectedNodeId);
+        if (!node) return null;
+        const isHub = node.id === hubNodeId;
+        const isTarget = node.id === targetNodeId;
+        
+        return (
+          <div className="absolute top-16 left-16 z-10 w-64 bg-[#050505]/95 backdrop-blur-md border border-neutral-900/60 p-4 rounded-2xl shadow-2xl flex flex-col gap-3.5 pointer-events-auto select-none animate-in slide-in-from-left-5 duration-200">
+            <div className="flex items-center justify-between border-b border-neutral-900/50 pb-2">
+              <span className="text-[0.65rem] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                Pin Inspector
+              </span>
+              <button 
+                onClick={() => setSelectedNodeId(null)}
+                className="text-[0.65rem] font-bold bg-neutral-950 border border-neutral-900 hover:bg-neutral-900 px-2 py-0.5 rounded-full text-neutral-400 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              {/* Name */}
+              <div>
+                <label className="block text-[0.65rem] font-bold text-neutral-500 uppercase mb-1">Name</label>
+                <input
+                  type="text"
+                  value={node.label}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNodes(prev => prev.map(n => n.id === node.id ? { ...n, label: val } : n));
+                  }}
+                  className="w-full px-2.5 py-1.5 bg-black border border-neutral-900 focus:border-rose-500 rounded-xl text-xs font-semibold focus:outline-none text-slate-200 transition-all"
+                />
+              </div>
+
+              {/* Coordinates display */}
+              <div className="flex gap-4 text-[0.65rem] font-bold text-neutral-500 bg-neutral-950 px-2.5 py-1.5 rounded-xl border border-neutral-900">
+                <div>X: <span className="text-slate-300">{node.x}px</span></div>
+                <div>Y: <span className="text-slate-300">{node.y}px</span></div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => handleSetHub(node.id)}
+                  disabled={isHub}
+                  className={`py-1.5 px-2 rounded-xl text-[0.65rem] font-bold border transition-colors ${
+                    isHub
+                      ? 'bg-rose-950/20 border-rose-500/20 text-rose-300 cursor-default'
+                      : 'bg-black border-neutral-900 text-neutral-300 hover:bg-neutral-900 hover:text-white'
+                  }`}
+                >
+                  Set as Hub
+                </button>
+                <button
+                  onClick={() => handleSetTarget(node.id)}
+                  disabled={isHub || isTarget}
+                  className={`py-1.5 px-2 rounded-xl text-[0.65rem] font-bold border transition-colors ${
+                    isTarget
+                      ? 'bg-cyan-950/20 border-cyan-500/20 text-cyan-300 cursor-default'
+                      : isHub
+                      ? 'opacity-20 border-neutral-900 text-neutral-600 cursor-not-allowed'
+                      : 'bg-black border-neutral-900 text-neutral-300 hover:bg-neutral-900 hover:text-white'
+                  }`}
+                >
+                  Set Target
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  deleteNode(node.id);
+                  if (onAddNodeToast) onAddNodeToast(`Deleted location [${node.label || `Location ${node.id}`}].`);
+                }}
+                className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/40 border border-red-950/30 text-red-400 hover:text-red-300 rounded-xl text-[0.65rem] font-bold transition-all mt-1"
+              >
+                Delete Location
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="absolute top-3 left-4 right-4 flex items-center justify-between pointer-events-none z-10">
         <div className="bg-black/90 backdrop-blur-md shadow-lg px-3 py-1.5 rounded-full border border-neutral-900 flex items-center gap-2 pointer-events-auto">
           <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
@@ -337,7 +507,7 @@ export default function GraphCanvas({
           {canvasMode === 'connect' && linkingStartId !== null && (() => {
             const startNode = nodes.find(n => n.id === linkingStartId);
             if (!startNode) return null;
-            return <line x1={startNode.x} y1={startNode.y} x2={linkingStartId} stroke="#f43f5e" strokeWidth="2" strokeDasharray="4 4" className="opacity-60 animate-pulse" />;
+            return <line x1={startNode.x} y1={startNode.y} x2={mousePos.x} y2={mousePos.y} stroke="#f43f5e" strokeWidth="2" strokeDasharray="4 4" className="opacity-60 animate-pulse" />;
           })()}
 
           {nodes.map((node) => {
@@ -432,20 +602,27 @@ export default function GraphCanvas({
                 )}
 
                 <g transform={`translate(${node.labelOffsetX ?? 0}, ${node.labelOffsetY ?? 24})`}>
-                  <text
-                    textAnchor="middle" dominantBaseline="middle"
-                    stroke="#000000" strokeWidth="4" strokeLinejoin="round"
-                    className="text-[0.65rem] font-bold tracking-tight pointer-events-none" y="0"
-                  >
-                    {node.label}
-                  </text>
-                  <text
-                    textAnchor="middle" dominantBaseline="middle"
-                    fill={isHub ? "#fca5a5" : isTarget ? "#22d3ee" : "#a3a3a3"}
-                    className={`text-[0.65rem] font-bold tracking-tight pointer-events-none ${isSelected ? 'text-rose-400 font-extrabold' : ''}`} y="0"
-                  >
-                    {node.label}
-                  </text>
+                  {(() => {
+                    const displayLabel = node.label?.trim() || (isHub ? "Central Hub" : `Location ${node.id}`);
+                    return (
+                      <>
+                        <text
+                          textAnchor="middle" dominantBaseline="middle"
+                          stroke="#000000" strokeWidth="4" strokeLinejoin="round"
+                          className="text-[0.65rem] font-bold tracking-tight pointer-events-none" y="0"
+                        >
+                          {displayLabel}
+                        </text>
+                        <text
+                          textAnchor="middle" dominantBaseline="middle"
+                          fill={isHub ? "#fca5a5" : isTarget ? "#22d3ee" : "#a3a3a3"}
+                          className={`text-[0.65rem] font-bold tracking-tight pointer-events-none ${isSelected ? 'text-rose-400 font-extrabold' : ''}`} y="0"
+                        >
+                          {displayLabel}
+                        </text>
+                      </>
+                    );
+                  })()}
                 </g>
               </g>
             );
@@ -542,54 +719,49 @@ export default function GraphCanvas({
         )}
 
         {/* Floating Context Menu on selected node */}
-        {canvasMode !== 'delete' && selectedNodeId !== null && !edgeModal.isOpen && (() => {
+        {canvasMode === 'select' && selectedNodeId !== null && !edgeModal.isOpen && (() => {
           const pos = getNodeScreenPos(selectedNodeId);
           if (!pos) return null;
           const isHub = selectedNodeId === hubNodeId;
           const isTarget = selectedNodeId === targetNodeId;
-          const node = nodes.find(n => n.id === selectedNodeId);
           return (
             <div
-              className="absolute z-40 flex flex-col gap-1.5 bg-black/95 backdrop-blur-md rounded-xl shadow-2xl border border-neutral-800 p-2 animate-in fade-in zoom-in-95 duration-150"
-              style={{ left: pos.x + 20, top: pos.y - 10, minWidth: 170 }}
+              className="absolute z-40 flex flex-col gap-1 bg-[#0a0a0a]/95 backdrop-blur-md rounded-xl shadow-2xl border border-neutral-900 p-1.5 animate-in fade-in zoom-in-95 duration-150"
+              style={{ left: pos.x + 20, top: pos.y - 10, minWidth: 140 }}
             >
-              <div className="px-2 py-0.5 text-[0.65rem] font-black text-neutral-500 uppercase tracking-wider">
-                {node?.label || 'Location'} Roles
-              </div>
-              <div className="border-t border-neutral-900/60 my-0.5" />
               <button
                 onClick={() => handleSetHub(selectedNodeId)}
                 disabled={isHub}
-                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   isHub
                     ? 'text-rose-400 bg-rose-950/40 cursor-default'
                     : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
-                <Home className="h-3.5 w-3.5 shrink-0" />
-                {isHub ? 'Current Hub' : 'Set as Start Hub'}
+                <Home className="h-3.5 w-3.5" />
+                {isHub ? 'Current Hub' : 'Set as Hub'}
               </button>
               <button
                 onClick={() => handleSetTarget(selectedNodeId)}
                 disabled={isHub || isTarget}
-                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   isTarget
                     ? 'text-cyan-400 bg-cyan-950/40 cursor-default'
                     : isHub
-                    ? 'text-neutral-600 cursor-not-allowed opacity-40'
+                    ? 'text-neutral-600 cursor-not-allowed'
                     : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <MapPin className="h-3.5 w-3.5" />
                 {isTarget ? 'Is Destination' : 'Set Destination'}
               </button>
-              <div className="border-t border-neutral-900/60 my-0.5" />
+              <div className="border-t border-neutral-900 my-0.5" />
               <button
                 onClick={() => handleDeleteSelected(selectedNodeId)}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-all w-full text-left"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-all"
               >
-                <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                Delete Node
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
               </button>
             </div>
           );
