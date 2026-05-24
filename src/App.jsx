@@ -71,20 +71,20 @@ export default function App() {
   const warningMsg = (() => {
     if (selectedAlgo === "dijkstra") {
       if (hubNodeId === null && targetNodeId === null) {
-        return "Please select a Hub and Destination to run Dijkstra.";
+        return "Set Hub & Destination";
       }
       if (hubNodeId === null) {
-        return "Please select a Hub to run Dijkstra.";
+        return "Set Start Hub";
       }
       if (targetNodeId === null) {
-        return "Please select a Destination to run Dijkstra.";
+        return "Set Destination";
       }
     }
     if (selectedAlgo === "prim" && hubNodeId === null) {
-      return "Please select a Hub to run Prim's MST.";
+      return "Set Start Hub";
     }
     if (selectedAlgo === "tsp" && hubNodeId === null) {
-      return "Please select a Hub to run the TSP solver.";
+      return "Set Start Hub";
     }
     return null;
   })();
@@ -390,6 +390,36 @@ export default function App() {
     setHighlightedEdges(newHighlightedEdges);
   }, [currentStepIndex, algoSteps, selectedAlgo]);
 
+  const handleSolveClick = () => {
+    if (selectedAlgo === "dijkstra") {
+      if (hubNodeId === null && targetNodeId === null) {
+        showToast("Please set a Central Hub and a Destination first!");
+        return;
+      }
+      if (hubNodeId === null) {
+        showToast("Please set a Central Hub first!");
+        return;
+      }
+      if (targetNodeId === null) {
+        showToast("Please set a Destination customer pin first!");
+        return;
+      }
+    } else if (selectedAlgo === "prim" && hubNodeId === null) {
+      showToast("Please set a Central Hub first to run Prim's MST!");
+      return;
+    } else if (selectedAlgo === "tsp" && hubNodeId === null) {
+      showToast("Please set a Central Hub first to run the TSP solver!");
+      return;
+    }
+
+    if (algoSteps.length === 0) {
+      showToast("No valid routing steps available. Make sure the network is connected!");
+      return;
+    }
+
+    setIsPlaying(!isPlaying);
+  };
+
   const handleStepForward = () => {
     if (currentStepIndex < algoSteps.length - 1)
       setCurrentStepIndex(currentStepIndex + 1);
@@ -404,26 +434,26 @@ export default function App() {
       {/* 1. TOP HEADER BAR */}
       <header className="h-16 w-full border-b border-neutral-900 bg-[#050505]/95 backdrop-blur-md px-5 flex items-center justify-between shrink-0 z-30 select-none">
         {/* Left Section: Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="bg-rose-500/10 border border-rose-500/25 p-2 rounded-xl text-rose-400">
             <Navigation className="h-5 w-5 rotate-45" />
           </div>
-          <div>
+          <div className="shrink-0">
             <h1 className="text-base font-black tracking-tight text-white leading-tight">
               LogiRoute
             </h1>
-            <p className="text-[0.65rem] font-semibold text-neutral-500 tracking-wide mt-0.5">
+            <p className="text-[0.65rem] font-semibold text-neutral-500 tracking-wide mt-0.5 whitespace-nowrap">
               Route Optimizer Sandbox
             </p>
           </div>
         </div>
 
         {/* Center Section: Dropdowns & Warnings */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4 shrink-0">
           {/* Preset Selector */}
           <div className="flex items-center gap-2">
             <span className="text-[0.65rem] font-black text-neutral-500 uppercase tracking-wider">
-              Map Grid:
+              Grid:
             </span>
             <select
               value={activePresetKey}
@@ -459,15 +489,15 @@ export default function App() {
 
           {/* Warning Badge */}
           {warningMsg && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[0.65rem] font-black animate-pulse">
-              <AlertTriangle className="h-3 w-3 text-amber-400" />
-              <span>{warningMsg}</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[0.65rem] font-black animate-pulse shrink-0 whitespace-nowrap">
+              <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
+              <span className="whitespace-nowrap">{warningMsg}</span>
             </div>
           )}
         </div>
 
         {/* Right Section: Media Controls & Toggles */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           {/* Stepper controls */}
           <div className="flex items-center gap-1 bg-neutral-950 border border-neutral-900 px-2 py-1 rounded-xl">
             {/* Step Backward */}
@@ -484,14 +514,8 @@ export default function App() {
 
             {/* Play/Pause */}
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              disabled={
-                (selectedAlgo === "dijkstra" &&
-                  (hubNodeId === null || targetNodeId === null)) ||
-                (selectedAlgo === "prim" && hubNodeId === null) ||
-                (selectedAlgo === "tsp" && hubNodeId === null) ||
-                algoSteps.length === 0
-              }
+              onClick={handleSolveClick}
+              disabled={isPlaying}
               className={`px-3 py-1.5 rounded-lg text-[0.7rem] font-extrabold flex items-center gap-1 border transition-all ${
                 isPlaying
                   ? "bg-red-950/40 border-red-500/30 text-red-400 hover:bg-red-950/60 shadow-lg shadow-red-950/20"
@@ -581,6 +605,7 @@ export default function App() {
             setNodes={setNodes}
             setEdges={setEdges}
             canvasMode={canvasMode}
+            setCanvasMode={setCanvasMode}
             selectedNodeId={selectedNodeId}
             setSelectedNodeId={setSelectedNodeId}
             hubNodeId={hubNodeId}

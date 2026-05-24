@@ -1,10 +1,8 @@
-import React from 'react';
 import { Home, Trash2, Link, MapPin, Move, PlusCircle, HelpCircle } from 'lucide-react';
 
 export default function SidebarControls({
   nodes,
   setNodes,
-  edges,
   setEdges,
   canvasMode,
   setCanvasMode,

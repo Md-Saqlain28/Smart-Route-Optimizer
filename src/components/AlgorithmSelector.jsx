@@ -1,5 +1,4 @@
-import React from 'react';
-import { Play, Pause, RotateCcw, ChevronRight, ChevronLeft, Zap, GitCommit, Sliders, AlertTriangle } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronRight, ChevronLeft, GitCommit, Sliders, AlertTriangle } from 'lucide-react';
 
 export default function AlgorithmSelector({
   selectedAlgo,
@@ -18,8 +17,7 @@ export default function AlgorithmSelector({
   targetNodeId,
   nodes
 }) {
-  const hubNode = nodes.find(n => n.id === hubNodeId);
-  const targetNode = nodes.find(n => n.id === targetNodeId);
+
 
   // Helper to check prerequisites
   const hasHub = hubNodeId !== null;

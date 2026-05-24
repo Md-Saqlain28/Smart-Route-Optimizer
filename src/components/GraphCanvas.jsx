@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
-import { Trash2, Link, MapPin, Move, PlusCircle } from "lucide-react";
+/* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
+import { useState, useRef, useLayoutEffect } from "react";
+import { Trash2, Link, MapPin, Move, PlusCircle, Home } from "lucide-react";
 import { getEuclideanDistance } from "../utils/algorithms";
 
 export default function GraphCanvas({
@@ -22,6 +23,8 @@ export default function GraphCanvas({
 }) {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
+
+  const [menuPos, setMenuPos] = useState(null);
 
   // Dragging state
   const [draggingNodeId, setDraggingNodeId] = useState(null);
@@ -62,8 +65,16 @@ export default function GraphCanvas({
     return { x, y };
   };
 
+  useLayoutEffect(() => {
+    if (selectedNodeId !== null) {
+      setMenuPos(getNodeScreenPos(selectedNodeId));
+    } else {
+      setMenuPos(null);
+    }
+  }, [selectedNodeId, nodes, hubNodeId, targetNodeId]);
+
   const handleCanvasClick = (e) => {
-    if (e.target !== svgRef.current) return;
+    if (e.target !== svgRef.current && e.target.id !== "grid-bg") return;
 
     if (canvasMode === "addNode") {
       const { x, y } = getSVGCoordinates(e);
@@ -345,7 +356,7 @@ export default function GraphCanvas({
       </div>
 
       {/* 3. Sliding Node Inspector Panel */}
-      {selectedNodeId !== null &&
+      {(canvasMode === "select" || canvasMode === "addNode") && selectedNodeId !== null &&
         (() => {
           const node = nodes.find((n) => n.id === selectedNodeId);
           if (!node) return null;
@@ -544,7 +555,7 @@ export default function GraphCanvas({
             </filter>
           </defs>
 
-          <rect width="100%" height="100%" fill="url(#grid)" />
+          <rect id="grid-bg" width="100%" height="100%" fill="url(#grid)" pointerEvents="none" />
 
           {edges.map((edge, index) => {
             const nodeA = nodes.find((n) => n.id === edge.from);
@@ -1014,18 +1025,17 @@ export default function GraphCanvas({
         )}
 
         {/* Floating Context Menu on selected node */}
-        {canvasMode === "select" &&
+        {(canvasMode === "select" || canvasMode === "addNode") &&
           selectedNodeId !== null &&
           !edgeModal.isOpen &&
+          menuPos &&
           (() => {
-            const pos = getNodeScreenPos(selectedNodeId);
-            if (!pos) return null;
             const isHub = selectedNodeId === hubNodeId;
             const isTarget = selectedNodeId === targetNodeId;
             return (
               <div
                 className="absolute z-40 flex flex-col gap-1 bg-[#0a0a0a]/95 backdrop-blur-md rounded-xl shadow-2xl border border-neutral-900 p-1.5 animate-in fade-in zoom-in-95 duration-150"
-                style={{ left: pos.x + 20, top: pos.y - 10, minWidth: 140 }}
+                style={{ left: menuPos.x + 20, top: menuPos.y - 10, minWidth: 140 }}
               >
                 <button
                   onClick={() => handleSetHub(selectedNodeId)}
